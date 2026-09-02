@@ -35,6 +35,9 @@ data-lab/**/*.zip
 data-lab/**/*.tar
 data-lab/**/*.gz
 !data-lab/**/.gitkeep
+!data-lab/FILES-MAP.json
+!data-lab/README.md
+!data-lab/mapped/**
 # Uncomment to track a tiny fixture corpus:
 # !data-lab/fixtures/**
 

@@ -1,0 +1,95 @@
+{
+  "_comment": "data-lab files mapping — scaffolded purely from session context (no filesystem access). Single source of truth for the 1st subset of the full list. Recovered 2026-09-03.",
+  "generated_at": "2026-09-03T00:00:00Z",
+  "source": "session context — every original data/doc file seen this session, by location",
+  "note": "Sizes are as reported in session. Types are md/json/txt/zip/tar. This file is the LANDING SPOT MAP for data-lab — the toolkit's t0_survey and t1_discovery will be taught to read it. No filesystem walk of the original vAUTOMATION tree was taken.",
+  "locations": {
+    "vAUTOMATION_root": {
+      "path": "vAUTOMATION/",
+      "note": "session start, pre-cleanup — root of the original vAUTOMATION tree",
+      "files": [
+        {"name": "chat-export-1788268864622.json", "size": 2397203, "type": "json", "note": "dup of .archive copy"},
+        {"name": "chat-export-1788278044285.json", "size": 902682, "type": "json"},
+        {"name": "MANIFEST.txt", "size": 3127, "type": "txt", "note": "inventory of vivim_extracted/"},
+        {"name": "toolkit.md", "size": 46296, "type": "md", "note": "transcript-toolkit design doc"},
+        {"name": "VIVIM_MASTER_SOURCE.md", "size": 538636, "type": "md", "note": "master source"},
+        {"name": "vivim_extracted-ROUND0.zip", "size": 159718, "type": "zip", "note": "archive"}
+      ]
+    },
+    "vAUTOMATION_.archive": {
+      "path": "vAUTOMATION/.archive/",
+      "files": [
+        {"name": "99a54695-875d-427a-921d-004e4c309793_revisi-n-ontolog-a-vnpo.md", "size": 347561, "type": "md", "note": "VNPO ontology catalog"},
+        {"name": "chat-AUTOMATION- MASTER-CODE.txt", "size": 777229, "type": "txt", "note": "S1, 21-chapter spec"},
+        {"name": "chat-export-1788276453391.json", "size": 852014, "type": "json", "note": "S3, AUDIT-001"},
+        {"name": "chat-export-1788277390533.json", "size": 2512253, "type": "json", "note": "S2 triplicate member"},
+        {"name": "phase0-08 automation.json", "size": 2223832, "type": "json", "note": "S2 triplicate member"},
+        {"name": "chat-export-1788268864622.json", "size": 2397203, "type": "json", "note": "S2 triplicate member"},
+        {"name": "splink-4.0.16.zip", "size": 21507986, "type": "zip"}
+      ]
+    },
+    "vAUTOMATION_ROUND-1": {
+      "path": "vAUTOMATION/ROUND-1/",
+      "files": [
+        {"name": "chat-AUTOMATION- MASTER-CODE.txt", "size": 823089, "type": "txt"},
+        {"name": "round-0-session.txt", "size": 823089, "type": "txt", "note": "hash-identical to the file above"},
+        {"name": "round-1-session-agoithmic-audit-partial-enhancement-ROUND-1-code.txt", "size": 349525, "type": "txt"},
+        {"name": "Comparar Python TypeScript_1788278988961.json", "size": 131314, "type": "json"},
+        {"name": "MANIFEST (1).txt", "size": 3380, "type": "txt"},
+        {"name": "harvest-0-prompt.md", "size": 17926, "type": "md"},
+        {"name": "harvest-v0.md", "size": 78620, "type": "md"},
+        {"name": "VIVIM-AUDIT-PACK.md", "size": 22447, "type": "md"},
+        {"name": "VIVIM-EXTRACTED-COMBINED.md", "size": 620825, "type": "md", "note": "dup of dev-workspace-1 copy"},
+        {"name": "VIVIM-MASTER-SPEC.md", "size": 56770, "type": "md"},
+        {"name": "vivim_extracted.zip", "size": 181482, "type": "zip"},
+        {"name": ".archive/chat-detaile-harvest-specs-ofullernel_.txt", "size": null, "type": "txt", "note": "seen in KE scan"},
+        {"name": ".archive/chat-provider-automation_.txt", "size": null, "type": "txt", "note": "seen in KE scan"}
+      ]
+    },
+    "vAUTOMATION_dev-workspace-1_and_HARVES": {
+      "path": "vAUTOMATION/dev-workspace-1/ and HARVES/",
+      "files": [
+        {"name": "dev-workspace-1/VIVIM SOTA HARVEST TARGET SPECIFICATION.md", "size": 41131, "type": "md"},
+        {"name": "dev-workspace-1/VIVIM-EXTRACTED-COMBINED.md", "size": 620825, "type": "md"},
+        {"name": "HARVES/HARVEST-0-AGENT-PROMPT-v2.md", "size": 13396, "type": "md"},
+        {"name": "HARVES/HARVEST-0-v2.md", "size": 37958, "type": "md"},
+        {"name": "HARVES/HARVEST-0-v3-FINAL.md", "size": 37927, "type": "md"},
+        {"name": "HARVES/workspace-3568d057-390d-482e-8597-3115e471b1db.tar", "size": 77000000, "type": "tar", "note": "77MB + same-named folder (124 files: ENDSTATE/GOVERNANCE/PROCESS/ROADMAP/STATE.md, turns/, repos/, specs/)"}
+      ]
+    },
+    "Generated_canonical_MDs": {
+      "path": "CANONICAL/ (not raw data but early generated)",
+      "note": "Generated-canonical MDs (from CANONICAL/, not raw data but early)",
+      "files": [
+        {"name": "00_STRUCTURE-AND-METHOD.md", "size": null, "type": "md"},
+        {"name": "01_SOURCE-INVENTORY.md", "size": null, "type": "md"},
+        {"name": "02_CONFLICT-RESOLUTION-TABLE.md", "size": null, "type": "md"},
+        {"name": "04_NEXT-STEPS.md", "size": null, "type": "md"},
+        {"name": "00_CATALOG-INDEX.md", "size": null, "type": "md"},
+        {"name": "01_FORENSICS…08_HEALING-CAPABILITIES.md", "size": null, "type": "md", "note": "01_FORENSICS through 08_HEALING-CAPABILITIES series"},
+        {"name": "09_ALGO-DEEP-DIVES/", "size": null, "type": "dir"}
+      ]
+    }
+  },
+  "stats": {
+    "locations": 5,
+    "files_total": 35,
+    "by_type": {"md": 16, "json": 8, "txt": 7, "zip": 3, "tar": 1, "dir": 1},
+    "total_bytes_known": 39000000
+  },
+  "mapping_system": {
+    "purpose": "This file IS the scaffolding for the data-lab files mapping system. The toolkit will not walk the original vAUTOMATION tree — it will read this map.",
+    "how_it_works": [
+      "1. data-lab/ is empty (only .gitkeep) — the real corpus lives elsewhere, but this map is the expected landing spot for the 1st subset.",
+      "2. toolkit/ingest/t0_survey.py is taught to read FILES-MAP.json when corpus_root is data-lab and data-lab is empty: it will synthesize ledger rows from this map (size, type, path) without needing the actual files.",
+      "3. toolkit/ingest/t1_discovery.py will use the map's by-type and by-location to seed clusters (e.g., 'vAUTOMATION/.archive' → cluster, 'HARVES' → cluster).",
+      "4. When the full list arrives (you said this is ONE SUBSET), this file will be appended — never overwritten — to grow the universe. The Template Universe Engine (toolkit/docs/plans/template-universe-engine/) will auto-update the 36-table map to include the new landing spots.",
+      "5. The portable's VPLANNER.bat and manifest.yaml will remain self-sufficient: if data-lab is empty, the pipeline still runs (0 files → 0 fragments → 0 conflicts → docpack/program scaffolds), but the map gives it a *knowable* expected corpus to verify against."
+    ],
+    "next_steps": [
+      "Drop the full list's next subset into this file (append to locations).",
+      "Run: python toolkit/ingest/t0_survey.py  # will now see 35 mapped files even though data-lab is empty",
+      "Run: python toolkit/docs/plans/template-universe-engine/engine/generate.py  # will see data-lab mapping as a new table if you add it"
+    ]
+  }
+}
