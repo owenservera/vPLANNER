@@ -1,0 +1,1097 @@
+{
+  "meta": {
+    "generated_at": "2026-09-02T22:53:47.365668Z",
+    "toolkit_sha": "51ed7da64d04",
+    "vplanner_version": "v4",
+    "rounds_total": 6,
+    "tables_total": 30,
+    "engine": "template-universe-engine/generate.py (stdlib-only)"
+  },
+  "stages": {
+    "t0_survey": {
+      "stage_id": "t0_survey",
+      "module": "ingest/t0_survey.py",
+      "round_stage": "survey",
+      "cc_module": "M1",
+      "order": 0,
+      "outputs": [
+        {
+          "path_template": "control-center-state/rounds/round-NNN.json",
+          "kind": "round",
+          "schema": "schemas/round-file.schema.json",
+          "condition": "always"
+        },
+        {
+          "path_template": "data/escalation-log.jsonl",
+          "kind": "ledger",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/tracker.json",
+          "kind": "ledger",
+          "schema": "schemas/ledger-row.schema.json",
+          "condition": "always"
+        }
+      ]
+    },
+    "t1_scope_scan": {
+      "stage_id": "t1_scope_scan",
+      "module": "ingest/t1_scope_scan.py",
+      "round_stage": "survey",
+      "cc_module": "M1",
+      "order": 1,
+      "outputs": [
+        {
+          "path_template": "data/scope/scan-model.json",
+          "kind": "scope",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "t1_discovery": {
+      "stage_id": "t1_discovery",
+      "module": "ingest/t1_discovery.py",
+      "round_stage": "scope_grounding",
+      "cc_module": "M2",
+      "order": 2,
+      "outputs": [
+        {
+          "path_template": "data/discovery/clusters.json",
+          "kind": "discovery",
+          "schema": null,
+          "condition": "if_no_ratified_scope"
+        },
+        {
+          "path_template": "data/discovery/discovery-summary.json",
+          "kind": "discovery",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/entity-packs/discovered.json",
+          "kind": "discovery",
+          "schema": null,
+          "condition": "always (blind-start vocab)"
+        },
+        {
+          "path_template": "data/scope/scope.json",
+          "kind": "scope",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "t1_ke_scan": {
+      "stage_id": "t1_ke_scan",
+      "module": "ingest/t1_ke_scan.py",
+      "round_stage": "scope_grounding",
+      "cc_module": "M2",
+      "order": 3,
+      "outputs": [
+        {
+          "path_template": "data/ke-cache.json",
+          "kind": "ke",
+          "schema": null,
+          "condition": "if_ke_signals"
+        },
+        {
+          "path_template": "data/ke-scan-summary.json",
+          "kind": "unknown",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/ke-terms.json",
+          "kind": "ke",
+          "schema": null,
+          "condition": "if_ke_signals"
+        }
+      ]
+    },
+    "t1b_scope_apply": {
+      "stage_id": "t1b_scope_apply",
+      "module": "ingest/t1b_scope_apply.py",
+      "round_stage": "scope_grounding",
+      "cc_module": "M2",
+      "order": 4,
+      "outputs": [
+        {
+          "path_template": "data/scope/scope.json",
+          "kind": "scope",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "t3_extract": {
+      "stage_id": "t3_extract",
+      "module": "extract/t3_extract.py",
+      "round_stage": "extraction",
+      "cc_module": "M4",
+      "order": 5,
+      "outputs": [
+        {
+          "path_template": "data/fragments/_code-index.jsonl",
+          "kind": "fragment",
+          "schema": "schemas/fragment.schema.json",
+          "condition": "if_fragments"
+        },
+        {
+          "path_template": "data/fragments/_index.jsonl",
+          "kind": "fragment",
+          "schema": "schemas/fragment.schema.json",
+          "condition": "if_fragments"
+        },
+        {
+          "path_template": "data/fragments/{SRC-ID}/{fragment_id}.json",
+          "kind": "fragment",
+          "schema": "schemas/fragment.schema.json",
+          "condition": "always"
+        }
+      ]
+    },
+    "t4_conflicts": {
+      "stage_id": "t4_conflicts",
+      "module": "assess/conflicts.py",
+      "round_stage": "assessment",
+      "cc_module": "M5",
+      "order": 6,
+      "outputs": [
+        {
+          "path_template": "data/conflicts.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/dup-ledger.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        }
+      ]
+    },
+    "t4b_consolidate": {
+      "stage_id": "t4b_consolidate",
+      "module": "assess/consolidate.py",
+      "round_stage": "assessment",
+      "cc_module": "M5",
+      "order": 7,
+      "outputs": [
+        {
+          "path_template": "data/conflicts.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/consolidated.json",
+          "kind": "consolidation",
+          "schema": null,
+          "condition": "if_assessed"
+        }
+      ]
+    },
+    "t5_ratify": {
+      "stage_id": "t5_ratify",
+      "module": "serve/rollup.py",
+      "round_stage": "population",
+      "cc_module": "M6",
+      "order": 8,
+      "outputs": [
+        {
+          "path_template": "data/INDEX.md",
+          "kind": "unknown",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/budget.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/conflicts.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/consolidated.json",
+          "kind": "consolidation",
+          "schema": null,
+          "condition": "if_assessed"
+        },
+        {
+          "path_template": "data/escalation-log.jsonl",
+          "kind": "ledger",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/escalations.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/status.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "plan": {
+      "stage_id": "plan",
+      "module": "plan/generator.py",
+      "round_stage": "population",
+      "cc_module": "M6",
+      "order": 9,
+      "outputs": [
+        {
+          "path_template": "data/atomic-task-list.json",
+          "kind": "unknown",
+          "schema": "schemas/atomic-unit.schema.json",
+          "condition": "always"
+        },
+        {
+          "path_template": "data/atomic-units.json",
+          "kind": "plan",
+          "schema": "schemas/atomic-unit.schema.json",
+          "condition": "always"
+        },
+        {
+          "path_template": "data/budget.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/consolidated.json",
+          "kind": "consolidation",
+          "schema": null,
+          "condition": "if_assessed"
+        },
+        {
+          "path_template": "data/dependency-edges.json",
+          "kind": "plan",
+          "schema": "schemas/dependency-edge.schema.json",
+          "condition": "always"
+        },
+        {
+          "path_template": "data/dispatch-plan.json",
+          "kind": "plan",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/escalations.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "rollup": {
+      "stage_id": "rollup",
+      "module": "serve/rollup.py",
+      "round_stage": "population",
+      "cc_module": "M6",
+      "order": 10,
+      "outputs": [
+        {
+          "path_template": "data/INDEX.md",
+          "kind": "unknown",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/budget.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/conflicts.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/consolidated.json",
+          "kind": "consolidation",
+          "schema": null,
+          "condition": "if_assessed"
+        },
+        {
+          "path_template": "data/escalation-log.jsonl",
+          "kind": "ledger",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/escalations.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/status.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        }
+      ]
+    },
+    "control_center": {
+      "stage_id": "control_center",
+      "module": "serve/control_center.py",
+      "round_stage": "freeze",
+      "cc_module": "M7",
+      "order": 11,
+      "outputs": [
+        {
+          "path_template": "data/budget.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/cc-data.json",
+          "kind": "control_center",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/cc-round.json",
+          "kind": "control_center",
+          "schema": null,
+          "condition": "if_publish"
+        },
+        {
+          "path_template": "data/conflicts.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/consolidated.json",
+          "kind": "consolidation",
+          "schema": null,
+          "condition": "if_assessed"
+        },
+        {
+          "path_template": "data/control-center.html",
+          "kind": "control_center",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/decisions-log.jsonl",
+          "kind": "unknown",
+          "schema": null,
+          "condition": "if_rulings"
+        },
+        {
+          "path_template": "data/dependency-edges.json",
+          "kind": "plan",
+          "schema": "schemas/dependency-edge.schema.json",
+          "condition": "always"
+        },
+        {
+          "path_template": "data/dispatch-plan.json",
+          "kind": "plan",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/dup-ledger.json",
+          "kind": "conflict",
+          "schema": null,
+          "condition": "if_extracted"
+        },
+        {
+          "path_template": "data/escalation-log.jsonl",
+          "kind": "ledger",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/escalations.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/history/round-N.html",
+          "kind": "round",
+          "schema": "schemas/round-file.schema.json",
+          "condition": "if_publish"
+        },
+        {
+          "path_template": "data/ke-cache.json",
+          "kind": "ke",
+          "schema": null,
+          "condition": "if_ke_signals"
+        },
+        {
+          "path_template": "data/status.json",
+          "kind": "rollup",
+          "schema": null,
+          "condition": "always"
+        },
+        {
+          "path_template": "data/tracker.json",
+          "kind": "ledger",
+          "schema": "schemas/ledger-row.schema.json",
+          "condition": "always"
+        }
+      ]
+    }
+  },
+  "rounds": {
+    "toolkit_setup": {
+      "round_stage": "toolkit_setup",
+      "cc_modules_unlocked": [
+        "M0"
+      ],
+      "stages": [],
+      "cumulative_outputs": [],
+      "cumulative_count": 0
+    },
+    "survey": {
+      "round_stage": "survey",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1"
+      ],
+      "stages": [
+        "t0_survey",
+        "t1_scope_scan"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/escalation-log.jsonl",
+        "data/scope/scan-model.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 4
+    },
+    "scope_grounding": {
+      "round_stage": "scope_grounding",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2"
+      ],
+      "stages": [
+        "t1_discovery",
+        "t1_ke_scan",
+        "t1b_scope_apply"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 11
+    },
+    "pm_skeleton": {
+      "round_stage": "pm_skeleton",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2",
+        "M3"
+      ],
+      "stages": [],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 11
+    },
+    "extraction": {
+      "round_stage": "extraction",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2",
+        "M3",
+        "M4"
+      ],
+      "stages": [
+        "t3_extract"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/fragments/_code-index.jsonl",
+        "data/fragments/_index.jsonl",
+        "data/fragments/{SRC-ID}/{fragment_id}.json",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 14
+    },
+    "assessment": {
+      "round_stage": "assessment",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5"
+      ],
+      "stages": [
+        "t4_conflicts",
+        "t4b_consolidate"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/conflicts.json",
+        "data/consolidated.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/dup-ledger.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/fragments/_code-index.jsonl",
+        "data/fragments/_index.jsonl",
+        "data/fragments/{SRC-ID}/{fragment_id}.json",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 17
+    },
+    "population": {
+      "round_stage": "population",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6"
+      ],
+      "stages": [
+        "t5_ratify",
+        "plan",
+        "rollup"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/INDEX.md",
+        "data/atomic-task-list.json",
+        "data/atomic-units.json",
+        "data/budget.json",
+        "data/conflicts.json",
+        "data/consolidated.json",
+        "data/dependency-edges.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/dispatch-plan.json",
+        "data/dup-ledger.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/escalations.json",
+        "data/fragments/_code-index.jsonl",
+        "data/fragments/_index.jsonl",
+        "data/fragments/{SRC-ID}/{fragment_id}.json",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/status.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 25
+    },
+    "freeze": {
+      "round_stage": "freeze",
+      "cc_modules_unlocked": [
+        "M0",
+        "M1",
+        "M2",
+        "M3",
+        "M4",
+        "M5",
+        "M6",
+        "M7"
+      ],
+      "stages": [
+        "control_center"
+      ],
+      "cumulative_outputs": [
+        "control-center-state/rounds/round-NNN.json",
+        "data/INDEX.md",
+        "data/atomic-task-list.json",
+        "data/atomic-units.json",
+        "data/budget.json",
+        "data/cc-data.json",
+        "data/cc-round.json",
+        "data/conflicts.json",
+        "data/consolidated.json",
+        "data/control-center.html",
+        "data/decisions-log.jsonl",
+        "data/dependency-edges.json",
+        "data/discovery/clusters.json",
+        "data/discovery/discovery-summary.json",
+        "data/dispatch-plan.json",
+        "data/dup-ledger.json",
+        "data/entity-packs/discovered.json",
+        "data/escalation-log.jsonl",
+        "data/escalations.json",
+        "data/fragments/_code-index.jsonl",
+        "data/fragments/_index.jsonl",
+        "data/fragments/{SRC-ID}/{fragment_id}.json",
+        "data/history/round-N.html",
+        "data/ke-cache.json",
+        "data/ke-scan-summary.json",
+        "data/ke-terms.json",
+        "data/scope/scan-model.json",
+        "data/scope/scope.json",
+        "data/status.json",
+        "data/tracker.json"
+      ],
+      "cumulative_count": 30
+    }
+  },
+  "universe": [
+    {
+      "path_template": "control-center-state/rounds/round-NNN.json",
+      "kind": "round",
+      "schema": "schemas/round-file.schema.json",
+      "rounds": [
+        "survey"
+      ],
+      "condition": "always",
+      "writers": [
+        "t0_survey"
+      ]
+    },
+    {
+      "path_template": "data/INDEX.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "t5_ratify",
+        "rollup"
+      ]
+    },
+    {
+      "path_template": "data/atomic-task-list.json",
+      "kind": "unknown",
+      "schema": "schemas/atomic-unit.schema.json",
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "plan"
+      ]
+    },
+    {
+      "path_template": "data/atomic-units.json",
+      "kind": "plan",
+      "schema": "schemas/atomic-unit.schema.json",
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "plan"
+      ]
+    },
+    {
+      "path_template": "data/budget.json",
+      "kind": "rollup",
+      "schema": null,
+      "rounds": [
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "t5_ratify",
+        "plan",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/cc-data.json",
+      "kind": "control_center",
+      "schema": null,
+      "rounds": [
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/cc-round.json",
+      "kind": "control_center",
+      "schema": null,
+      "rounds": [
+        "freeze"
+      ],
+      "condition": "if_publish",
+      "writers": [
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/conflicts.json",
+      "kind": "conflict",
+      "schema": null,
+      "rounds": [
+        "assessment",
+        "population",
+        "freeze"
+      ],
+      "condition": "if_extracted",
+      "writers": [
+        "t4_conflicts",
+        "t4b_consolidate",
+        "t5_ratify",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/consolidated.json",
+      "kind": "consolidation",
+      "schema": null,
+      "rounds": [
+        "assessment",
+        "population",
+        "freeze"
+      ],
+      "condition": "if_assessed",
+      "writers": [
+        "t4b_consolidate",
+        "t5_ratify",
+        "plan",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/control-center.html",
+      "kind": "control_center",
+      "schema": null,
+      "rounds": [
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/decisions-log.jsonl",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "freeze"
+      ],
+      "condition": "if_rulings",
+      "writers": [
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/dependency-edges.json",
+      "kind": "plan",
+      "schema": "schemas/dependency-edge.schema.json",
+      "rounds": [
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "plan",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/discovery/clusters.json",
+      "kind": "discovery",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "if_no_ratified_scope",
+      "writers": [
+        "t1_discovery"
+      ]
+    },
+    {
+      "path_template": "data/discovery/discovery-summary.json",
+      "kind": "discovery",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "always",
+      "writers": [
+        "t1_discovery"
+      ]
+    },
+    {
+      "path_template": "data/dispatch-plan.json",
+      "kind": "plan",
+      "schema": null,
+      "rounds": [
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "plan",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/dup-ledger.json",
+      "kind": "conflict",
+      "schema": null,
+      "rounds": [
+        "assessment",
+        "freeze"
+      ],
+      "condition": "if_extracted",
+      "writers": [
+        "t4_conflicts",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/entity-packs/discovered.json",
+      "kind": "discovery",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "always (blind-start vocab)",
+      "writers": [
+        "t1_discovery"
+      ]
+    },
+    {
+      "path_template": "data/escalation-log.jsonl",
+      "kind": "ledger",
+      "schema": null,
+      "rounds": [
+        "survey",
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "t0_survey",
+        "t5_ratify",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/escalations.json",
+      "kind": "rollup",
+      "schema": null,
+      "rounds": [
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "t5_ratify",
+        "plan",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/fragments/_code-index.jsonl",
+      "kind": "fragment",
+      "schema": "schemas/fragment.schema.json",
+      "rounds": [
+        "extraction"
+      ],
+      "condition": "if_fragments",
+      "writers": [
+        "t3_extract"
+      ]
+    },
+    {
+      "path_template": "data/fragments/_index.jsonl",
+      "kind": "fragment",
+      "schema": "schemas/fragment.schema.json",
+      "rounds": [
+        "extraction"
+      ],
+      "condition": "if_fragments",
+      "writers": [
+        "t3_extract"
+      ]
+    },
+    {
+      "path_template": "data/fragments/{SRC-ID}/{fragment_id}.json",
+      "kind": "fragment",
+      "schema": "schemas/fragment.schema.json",
+      "rounds": [
+        "extraction"
+      ],
+      "condition": "always",
+      "writers": [
+        "t3_extract"
+      ]
+    },
+    {
+      "path_template": "data/history/round-N.html",
+      "kind": "round",
+      "schema": "schemas/round-file.schema.json",
+      "rounds": [
+        "freeze"
+      ],
+      "condition": "if_publish",
+      "writers": [
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/ke-cache.json",
+      "kind": "ke",
+      "schema": null,
+      "rounds": [
+        "scope_grounding",
+        "freeze"
+      ],
+      "condition": "if_ke_signals",
+      "writers": [
+        "t1_ke_scan",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/ke-scan-summary.json",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "always",
+      "writers": [
+        "t1_ke_scan"
+      ]
+    },
+    {
+      "path_template": "data/ke-terms.json",
+      "kind": "ke",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "if_ke_signals",
+      "writers": [
+        "t1_ke_scan"
+      ]
+    },
+    {
+      "path_template": "data/scope/scan-model.json",
+      "kind": "scope",
+      "schema": null,
+      "rounds": [
+        "survey"
+      ],
+      "condition": "always",
+      "writers": [
+        "t1_scope_scan"
+      ]
+    },
+    {
+      "path_template": "data/scope/scope.json",
+      "kind": "scope",
+      "schema": null,
+      "rounds": [
+        "scope_grounding"
+      ],
+      "condition": "always",
+      "writers": [
+        "t1_discovery",
+        "t1b_scope_apply"
+      ]
+    },
+    {
+      "path_template": "data/status.json",
+      "kind": "rollup",
+      "schema": null,
+      "rounds": [
+        "population",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "t5_ratify",
+        "rollup",
+        "control_center"
+      ]
+    },
+    {
+      "path_template": "data/tracker.json",
+      "kind": "ledger",
+      "schema": "schemas/ledger-row.schema.json",
+      "rounds": [
+        "survey",
+        "freeze"
+      ],
+      "condition": "always",
+      "writers": [
+        "t0_survey",
+        "control_center"
+      ]
+    }
+  ]
+}

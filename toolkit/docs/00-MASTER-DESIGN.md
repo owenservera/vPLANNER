@@ -163,3 +163,28 @@ Full fork context: `07-FORK-DECISION-RECORD.md`.
 ## 7. Invariants Recap (carry-forward)
 
 Deterministic core (no LLM in t0→t3) · ledger-as-law · verbatim gate · SUPERSEDED preserved · derived-only CC · no silent de-escalation · append-only logs · atomic writes · schema-validated before trust · stdlib-only · **budgets advisory, default unconstrained** · **corrupted input is data (FAILED rows), never an exception** · **blind start: discovery generates scope+vocab, nothing VIVIM-specific shipped as default**.
+
+---
+
+## 8. Progressive Control Center Model (PRD-CC-01, realtime per turn)
+
+**Realtime round emission:** `serve/round_emitter.py` writes `control-center-state/rounds/round-NNN.json` after each successful `run_all.py` stage (atomic, incremental `NNN = max(existing)+1`, schema-validated). `_emit_round()` is advisory-only — emitter errors never break the stage. `--dry-run` skips emission.
+
+**Progressive reveal (PRD §3 principle 2):** `serve/control_center.py::load_progressive_state()` replays `rounds/round-NNN.json` in numeric order (skipping malformed files with a visible banner, never crashing). `union(modules_unlocked)` determines what is rendered — locked modules are invisible in the DOM, not greyed. Fallback when `rounds/` empty: `{"M0","M1","M2","M3","M4","M5"}` (cold start shows all legacy layers).
+
+**Module-stage map (canonical, PRD §6):**
+
+| Toolkit stage | CC module | Evidence |
+|---|---|---|
+| toolkit_setup | M0 Folder Map | `round.stage=toolkit_setup` |
+| survey | M1 Survey Snapshot | `round.stage=survey` |
+| scope_grounding | M2 Scope Model | `round.stage=scope_grounding` |
+| pm_skeleton | M3 Workstreams & Tasks | `round.stage=pm_skeleton` |
+| extraction | M4 Extraction Progress | `round.stage=extraction` |
+| assessment | M5 Conflict & Confidence Board | `round.stage=assessment` |
+| population | M6 Populated Docpack View | `round.stage=population` |
+| freeze | M7 Genealogy & Dependency Graph | `round.stage=freeze` (derived replay, no dates) |
+
+Genealogy at M7 is derived by replaying rounds + `70-PROGRAM/06_DECISIONS.md` DCL log — no new ledger.
+
+**Feedback enablement is DRAFT-only (PRD §3 principle 3 + §5.2):** `serve/feedback_ingest.py` reads `control-center-state/feedback/HF-XXXX.json` (`status:DRAFT`, `provenance:HUMAN-UI`, one file per draft). `control_center.py` surfaces `count_by_target()` as badges and a `write_feedback_draft()` helper (File System Access API `showDirectoryPicker()` primary, download fallback). Drafts are advisory — `serve/rulings_applier.py` logs `"{N} DRAFT feedback item(s) pending"` but never mutates canonical state from drafts. Browser never edits round files (write-once, append-only, ID-prefixed).

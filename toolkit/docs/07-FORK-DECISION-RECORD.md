@@ -56,3 +56,15 @@ Therefore: "V3 now" ≈ 80% of the code already written, plus verification disci
 - If T6 reveals CC V4 MAX is unstable, dial back to the incremental §11 scope rather than debug forward (reversibility principle)
 - VIVIM-specific behavior remains available opt-in (`entity-packs/vivim.json`) — nothing lost from Branch B's defaults
 - This record justifies why open items O1/O2 are marked P0 in `00-MASTER-DESIGN.md §6`
+
+---
+
+## 2026-09-03 — PRD-CC-01 Reconciliation (Progressive CC + Feedback Enablement)
+
+**Context:** PRD-CC-01 (docs/PRD-Control-Center.md, 148 lines, DRAFT 2026-09-02) introduced the Control Center as the visual mirror of the toolkit state machine (1:1 module-stage correspondence, progressive invisible-until-unlocked, write-once rounds, one-file-per-feedback-item, File System Access API write path, genealogy derived, no dates).
+
+**Decision:** Layer PRD-CC-01 onto the existing v4 blind-start architecture (12 canons, funnel, ledger-as-law, verbatim gate, FORGE router) without rewriting. The prior blind-start retrofit (heading TF-IDF clustering, heuristic code-tree, PARKED default, empty scope.json) remains intact. The new CC state layer is additive: `serve/round_emitter.py`, `serve/feedback_ingest.py`, `schemas/{round-file,feedback-draft}.schema.json`, `run_all.py` post-stage `_emit_round()`, `serve/control_center.py` `load_progressive_state()` + progressive header/banner + per-module `fb-panel` + JS `write_feedback_draft()` (FS Access + download fallback) + `rulings_applier.py` advisory log.
+
+**Consequences:** `toolkit/docs/00-07` each get a Progressive/Feedback subsection (append-only), not a rewrite. `toolkit/control-center-state/rounds/` + `feedback/` are the new on-disk contracts (write-once rounds, DRAFT feedback). The pipeline never mutates from drafts (advisory only). No silent de-escalation, no calendar Gantt, no server, no Node.
+
+**Verification:** `pytest tests/test_cc_state_schemas.py tests/test_round_emitter.py tests/test_feedback_ingest.py tests/test_cc_progressive_visibility.py` (19 tests) + `python run_all.py --dry-run` + `python run_all.py --stage t0_survey` single-stage round emission + malformed-file resilience. See 06-ACCEPTANCE-TESTS.md T6.

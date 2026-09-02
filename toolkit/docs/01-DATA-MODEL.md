@@ -245,3 +245,58 @@ Derived-only (C8). `cc-data.json` is the standalone island for watch-mode pollin
 { "done": ["t0_survey", "…"], "last": "control_center", "updated": "ISO" }
 ```
 Resume-safe: completed stages skipped unless `--force`. Discovery stage included.
+
+---
+
+## 9. Control Center State Layer (PRD-CC-01)
+
+### 9.1 `control-center-state/rounds/round-NNN.json` (write-once, append-only)
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "round-file",
+  "type": "object",
+  "required": ["round", "stage", "modules_unlocked", "at"],
+  "properties": {
+    "round": {"type": "integer", "minimum": 0},
+    "stage": {"type": "string", "enum": ["toolkit_setup","survey","scope_grounding","pm_skeleton","extraction","assessment","population","freeze"]},
+    "modules_unlocked": {"type": "array", "items": {"type": "string", "enum": ["M0","M1","M2","M3","M4","M5","M6","M7"]}, "minItems": 1},
+    "at": {"type": "string", "minLength": 1},
+    "primitives": {"type": "object"},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": true
+}
+```
+
+- `round` is `max(existing)+1`, zero-padded `round-NNN.json`, atomic `tmp+os.replace`.
+- `stage` maps to `STAGE_TO_ROUND` in `run_all.py` (e.g. `t0_survey→survey`, `t1_discovery→scope_grounding`).
+- `modules_unlocked` is `STAGE_TO_MODULES[stage]` (see 00 §8).
+- `primitives` is a lightweight snapshot of that stage's output (e.g. `{"stage": "t0_survey", "total_files": 42}`).
+
+Browser read: list `rounds/`, sort numerically, parse what parses, **skip+flag** malformed (visible banner, never crash), replay in order → `union(modules_unlocked)` + `latest[module]`.
+
+### 9.2 `control-center-state/feedback/HF-XXXX.json` (one file per draft, advisory)
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "feedback-draft",
+  "type": "object",
+  "required": ["id", "at", "status", "provenance", "target", "body"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^HF-\\d{4}$"},
+    "at": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["DRAFT"]},
+    "provenance": {"type": "string", "enum": ["HUMAN-UI"]},
+    "target": {"type": "object", "required": ["type","id"], "properties": {"type": {"enum": ["module","workstream","task","decision","risk","scope_rule","general"]}, "id": {"type": "string"}}},
+    "body": {"type": "object"},
+    "round_context": {"type": "integer"}
+  }
+}
+```
+
+- Written by `control_center.py` JS helper `write_feedback_draft(targetType, targetId, body)` via File System Access API (`showDirectoryPicker()` → `control-center-state/feedback/HF-XXXX.json` atomic) or download fallback (`Blob → a.click()` + instruction to drop into `feedback/`).
+- Read by `serve/feedback_ingest.py::list_drafts()` (sorted `HF-*` lexical, `parse_error` flag for malformed, never crashes) and `count_by_target()`.
+- `serve/rulings_applier.py` logs count advisory, never mutates from drafts (`"{N} DRAFT feedback item(s) pending"`).

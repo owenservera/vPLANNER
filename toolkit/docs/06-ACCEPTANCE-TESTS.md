@@ -113,3 +113,19 @@
 | T7–T8 (incl. random-corpus) | pending |
 
 Unblock sequence: fix O1 → run T2–T6 on mini-corpus + random-corpus → T7/T8 on real corpora.
+
+---
+
+## T6 — Control Center Progressive & Feedback (PRD-CC-01)
+
+| ID | Check | Pass when |
+|---|---|---|
+| T6.1 | Cold start (no rounds) fallback | `load_progressive_state(empty)` → `unlocked={M0..M5}`, HTML contains L0..L5, prog strip shows "cold start" |
+| T6.2 | M0-only at round-000 | `rounds/round-000.json` with `modules_unlocked:["M0"]` → HTML contains `layer-L0`, not `layer-L1..L5`, prog strip "1/8 M0" |
+| T6.3 | M0..M1 at round-001 | `round-001.json` with `M0,M1` → HTML contains `layer-L0`, prog strip "M0 M1", M2 not in unlocked |
+| T6.4 | Malformed round skipped | `round-002.json` with `{ not json }` → HTML banner "1 round file skipped", pipeline not crashed, other rounds replayed |
+| T6.5 | Feedback draft valid + badge | Write `HF-0001.json` via `write_feedback_draft("module","M0","comment")` → validates against `feedback-draft.schema.json`, `list_drafts()` returns it, HTML shows "1 draft(s)" badge in prog strip and L0 `fb-panel` |
+| T6.6 | Feedback malformed flagged | Write `HF-0002.json` with `{ not json }` → `list_drafts()` returns `{parse_error: True}`, HTML banner "1 malformed HF-*.json", not crashed |
+| T6.7 | Rulings advisory | With 2 `HF-*.json` on disk, `python serve/rulings_applier.py --dry-run` logs `"2 DRAFT feedback item(s) pending"` |
+
+Run: `pytest tests/test_cc_state_schemas.py tests/test_round_emitter.py tests/test_feedback_ingest.py tests/test_cc_progressive_visibility.py -v`

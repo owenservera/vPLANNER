@@ -131,11 +131,19 @@ def run(cfg: dict) -> dict:
         # Skip files inside code trees — they are batch-processed by adapter
         if any(p.is_relative_to(ct) for ct in code_trees_found):
             continue
+        # Skip generated artifacts that self-pollute corpus (CONTROL-CENTER.html written to corpus_root in legacy VIVIM path)
+        if rel.endswith("CONTROL-CENTER.html") and ("DOCPACK" in rel or "control-center" in rel.lower()):
+            continue
+        if rel.endswith(".gitkeep"):
+            continue
         # Skip files inside the v4 data dir if corpus_root contains it
         if rel.startswith("50-TOOLKIT/v4/data"):
             continue
         if rel.startswith("50-TOOLKIT/v4/"):
             # Skip v4's own code/config — not corpus
+            continue
+        # Generic corpus guard: never treat toolkit's own generated data/ as corpus (when corpus_root is data-lab)
+        if rel.startswith("data/") and ("control-center" in rel or "cc-data.json" in rel):
             continue
 
         # Binary sniff — skip binary files (images, executables) but record as FAILED

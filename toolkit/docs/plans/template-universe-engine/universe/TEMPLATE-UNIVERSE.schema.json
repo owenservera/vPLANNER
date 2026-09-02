@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "template-universe",
+  "type": "object",
+  "required": ["meta", "stages", "rounds", "universe"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["generated_at", "toolkit_sha", "rounds_total", "tables_total"],
+      "properties": {
+        "generated_at": {"type": "string", "minLength": 1},
+        "toolkit_sha": {"type": "string", "pattern": "^[0-9a-f]{12}$"},
+        "vplanner_version": {"type": "string"},
+        "rounds_total": {"type": "integer", "minimum": 1},
+        "tables_total": {"type": "integer", "minimum": 1},
+        "engine": {"type": "string"}
+      }
+    },
+    "stages": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "required": ["stage_id", "module", "round_stage", "cc_module", "order", "outputs"],
+          "properties": {
+            "stage_id": {"type": "string"},
+            "module": {"type": "string"},
+            "round_stage": {"type": "string", "enum": ["toolkit_setup","survey","scope_grounding","pm_skeleton","extraction","assessment","population","freeze"]},
+            "cc_module": {"type": "string", "enum": ["M0","M1","M2","M3","M4","M5","M6","M7"]},
+            "order": {"type": "integer"},
+            "outputs": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["path_template", "kind", "condition"],
+                "properties": {
+                  "path_template": {"type": "string"},
+                  "kind": {"type": "string"},
+                  "schema": {"type": ["string","null"]},
+                  "condition": {"type": "string"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "rounds": {
+      "type": "object",
+      "patternProperties": {
+        "^.*$": {
+          "type": "object",
+          "required": ["round_stage", "cc_modules_unlocked", "stages", "cumulative_outputs", "cumulative_count"],
+          "properties": {
+            "round_stage": {"type": "string"},
+            "cc_modules_unlocked": {"type": "array", "items": {"type": "string"}},
+            "stages": {"type": "array", "items": {"type": "string"}},
+            "cumulative_outputs": {"type": "array", "items": {"type": "string"}},
+            "cumulative_count": {"type": "integer"}
+          }
+        }
+      }
+    },
+    "universe": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["path_template", "kind", "rounds", "condition", "writers"],
+        "properties": {
+          "path_template": {"type": "string"},
+          "kind": {"type": "string"},
+          "schema": {"type": ["string","null"]},
+          "rounds": {"type": "array", "items": {"type": "string"}},
+          "condition": {"type": "string"},
+          "writers": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    }
+  }
+}

@@ -87,6 +87,20 @@ def main():
     cfg = tomlite.load()
     dd = _data_dir(cfg)
 
+    # Advisory: surface DRAFT feedback drafts (never mutates, just logs) — PRD §5.2 enablement
+    try:
+        from serve import feedback_ingest
+        drafts = feedback_ingest.list_drafts()
+        if drafts:
+            common.log(f"{len(drafts)} DRAFT feedback item(s) pending — review before next pipeline run", "info")
+            for d in drafts[:10]:
+                # Use id and target for visibility
+                common.log(f"  {d.get('id','?')} target={d.get('target',{})} parse_error={d.get('parse_error', False)}", "info")
+            if len(drafts) > 10:
+                common.log(f"  ... and {len(drafts)-10} more", "info")
+    except Exception as e:
+        common.log(f"feedback ingest check failed: {e}", "warn")
+
     # Resolve all incoming dirs and collect files
     files: list[Path] = []
     for d in _incoming_dirs(cfg):

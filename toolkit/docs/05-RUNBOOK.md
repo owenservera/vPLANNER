@@ -110,3 +110,34 @@ Migrates: tracker (adds `tier`/`confidence`/`source_type`), ke-terms, conflicts,
 5. T3 items: present to the human — cluster disposition, MIXED batch (if KE active), ratification, irreversible ops
 6. T0/T1: never involve anyone. T1_discovery is deterministic — always T0
 7. Rebuild CC after each ruling round; `--publish` at round end
+
+---
+
+## 7. Feedback Flow (PRD-CC-01)
+
+**Human-in-browser → agent-in-terminal loop (DRAFT-only):**
+
+1. Open `toolkit/data/control-center.html` (file://) or serve `toolkit/data/`.
+2. In any unlocked module, open **"Propose / Comment on M*"** → textarea → **Submit draft → HF-XXXX.json**.
+   - Primary: `showDirectoryPicker()` (Chrome) writes atomically to `toolkit/control-center-state/feedback/HF-XXXX.json` (`{id, at, status:DRAFT, provenance:HUMAN-UI, target:{type,id}, body:{comment}, round_context}`).
+   - Fallback: downloads `HF-XXXX.json`; instruction: “drop into `toolkit/control-center-state/feedback/`”.
+3. Reload CC: badge shows `N draft(s)` per module (via `feedback_ingest.count_by_target()`), banner for malformed drafts.
+4. Agent runs `python serve/rulings_applier.py --dry-run` or `python run_all.py` → logs `"{N} DRAFT feedback item(s) pending — review before next pipeline run"` (advisory, no mutation).
+5. Disposition (`ACCEPTED/REJECTED/SUPERSEDED`) is deferred — a follow-on plan will promote drafts to ledger edits; v1 never auto-applies.
+
+```bash
+# List drafts
+python -c "from serve.feedback_ingest import list_drafts; print(list_drafts())"
+# Check advisory count (no mutation)
+python serve/rulings_applier.py --dry-run
+# After manual drop of downloaded HF-XXXX.json
+python -c "from serve.control_center import load_progressive_state; from pathlib import Path; print(load_progressive_state(Path('data')))"
+```
+
+**Control-center-state layout:**
+
+```
+toolkit/control-center-state/
+  rounds/round-000.json, round-001.json, ...   # write-once, append-only, ID-prefixed, atomic
+  feedback/HF-0001.json, HF-0002.json, ...     # one file per draft, DRAFT/HUMAN-UI
+```

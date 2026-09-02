@@ -156,3 +156,21 @@ PARKED rows do not block G1 (they are not EXTRACT). Blind-start with unratified 
 - `--stage X` runs one stage, records state; `--force` clears; `--dry-run` prints plan
 - Stage exception → logged with traceback, **pipeline continues**, stage recorded (advisory philosophy)
 - Watch mode (`--watch`) polls `tracker/fragments/consolidated/conflicts/escalations` mtimes every 3s and rebuilds CC only (lazy)
+
+---
+
+## 9. Round Emission & Feedback Ingest (PRD-CC-01)
+
+**Round emission:** after each `STAGES` entry succeeds in `run_all.py`, `round_emitter.emit(STAGE_TO_ROUND[stage], primitives={"stage": stage})` is called inside the `try` success branch (skips on `--dry-run`, swallows emitter errors so they never break the stage). `STAGE_TO_ROUND` maps `t0_survey→survey`, `t1_scope_scan→survey`, `t1_discovery→scope_grounding`, `t1_ke_scan→scope_grounding`, `t1b_scope_apply→scope_grounding`, `t3_extract→extraction`, `t4_conflicts→assessment`, `t4b_consolidate→assessment`, `t5_ratify→population`, `plan→population`, `rollup→population`, `control_center→freeze`. `toolkit_setup` (M0) is synthesized as `round-000.json` on first run when no rounds exist.
+
+| Stage | Emits round stage | Modules unlocked |
+|---|---|---|
+| t0_survey | survey | M0,M1 |
+| t1_scope_scan + t1_discovery | scope_grounding | M0..M2 |
+| t1_ke_scan, t1b_scope_apply | scope_grounding | M0..M2 |
+| t3_extract | extraction | M0..M4 |
+| t4_conflicts, t4b_consolidate | assessment | M0..M5 |
+| t5_ratify, plan, rollup | population | M0..M6 |
+| control_center | freeze | M0..M7 |
+
+**Feedback is advisory read source:** `serve/feedback_ingest.py` is an additional read source for `rulings_applier.py` and `control_center.py` (like `ke-cache.json` or `tracker.json`). The pipeline never blocks on drafts and never mutates ledger state from drafts; it only logs counts. The browser write path is File System Access API only (Chrome-family); fallback is download. Genealogy at freeze is derived replay (no new ledger).

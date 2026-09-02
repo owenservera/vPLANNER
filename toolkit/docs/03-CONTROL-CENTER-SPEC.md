@@ -94,3 +94,32 @@ Ink/evidence-bench palette (`--ink-0..2`, `--hair`, `--paper`, amber/moss/brick/
 ## 11. Rendering Contract
 
 `CC_DATA` island contains: `generated_at, round, published, is_current, is_constrained, dispositions, queue[], constitution[], fragments_sample[], ke_class_of, dispatch[], budgets[], gates{}, blocking[], conflicts, entities_count`. HTML-unsafe sequences escaped (`</`, `<!--`). Everything the JS needs is in the island — **the island is the API**.
+
+---
+
+## 8. Progressive Model (PRD-CC-01 v1)
+
+**1:1 primitive correspondence:** every visual element traces to a specific field in a specific `round-NNN.json` (no invented/interpolated data). `load_progressive_state()` replays `rounds/round-*.json` sorted numerically, skips+flags malformed (never crashes), unions `modules_unlocked`, tracks `latest[module]`, surfaces `errors[]`.
+
+**Locked = invisible, not greyed:** `if not _layer_unlocked(lid): continue` (L1-L4) and `if _layer_unlocked("LX"): C.append("<section...")` (L0,LF,LG,L5). Rail buttons gated identically. Cold start (`rounds/` empty) fallback `{"M0","M1","M2","M3","M4","M5"}` preserves pre-progressive behavior (all legacy layers visible).
+
+**Layer → module mapping (v1, progressive):**
+
+| Layer (HTML) | Required module | Meaning |
+|---|---|---|
+| L0 Scope | M0 | Folder map / Scope Constitution |
+| L1 Extraction Atlas | M4 | Extraction progress (fragments present) |
+| L2 Consolidation | M6 | Population / consolidated view |
+| L3 Program | M3 | PM skeleton / workstreams |
+| L4 Roadmap | M7 | Freeze genealogy + dependency graph |
+| LF Funnel | M5 | Assessment funnel |
+| LG Graphs | M7 | Genealogy graphs |
+| L5 Ops & Gates | M5 | Assessment gate health |
+
+**Round-file contract:** write-once, append-only, ID-prefixed `round-NNN.json`, atomic `tmp+os.replace`, incremental `NNN = max(existing)+1`, validated against `round-file.schema.json`. Browser lists, sorts numerically, parses what parses.
+
+**Feedback affordance:** per-module `<details class='fb-panel'>` with textarea + `submitFeedback(targetType, targetId, textareaId)` → `write_feedback_draft()` (FS Access API `showDirectoryPicker()` → `feedback/HF-XXXX.json` atomic, or `Blob` download fallback + instruction). `draft_counts` surfaced as `prog-strip` badge + per-module `fb-badge` via `feedback_ingest.count_by_target()`. Drafts never authoritative (DRAFT/HUMAN-UI).
+
+**Genealogy at M7:** derived by replaying `rounds/*.json` + `70-PROGRAM/06_DECISIONS.md` DCL log (PRD §5.4) — no new ledger.
+
+**Header strip:** `unlocks: {len}/8 {sorted}` + `progressive|cold start` + `rounds: N` + `N draft(s)` pill; banners for malformed rounds/feedback (visible, never blocking).

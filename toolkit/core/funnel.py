@@ -69,7 +69,7 @@ class EscalationEngine:
         self.t_llm = float(t.get("t_llm", 0.30))
         # Resolve data_dir for log
         dd = cfg.get("paths", {}).get("data_dir", "data")
-        self.log_path = (common.V4_ROOT / dd).resolve() if not Path(dd).is_absolute() else Path(dd) / "escalation-log.jsonl"
+        self.log_path = (common.V4_ROOT / Path(dd) / "escalation-log.jsonl").resolve() if not Path(dd).is_absolute() else Path(dd) / "escalation-log.jsonl"
         # Ensure parent exists
         self.log_path.parent.mkdir(parents=True, exist_ok=True)
 
