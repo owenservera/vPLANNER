@@ -72,12 +72,16 @@ def render(doc_id, filename, purpose, sections):
 def run(cfg: dict | None = None) -> dict:
     if cfg is None:
         cfg = tomlite.load()
-    # DOCPACK lives at corpus_root/60-CANONICAL/DOCPACK — resolve relative to V4
+    # DOCPACK lives at corpus_root/60-CANONICAL/DOCPACK for legacy VIVIM, else at toolkit/data/docpack (never pollute generic data-lab)
     corpus_root = Path(cfg["paths"]["corpus_root"])
     if not corpus_root.is_absolute():
         corpus_root = (common.V4_ROOT / corpus_root).resolve()
-    docpack = corpus_root / "60-CANONICAL" / "DOCPACK"
-    if not corpus_root.exists():
+    is_generic = "data-lab" in str(corpus_root)
+    if is_generic:
+        docpack = common.V4_ROOT / "data" / "docpack"
+    else:
+        docpack = corpus_root / "60-CANONICAL" / "DOCPACK"
+    if not corpus_root.exists() and not is_generic:
         # Fallback: original location
         docpack = common.V4_ROOT.parents[1] / "60-CANONICAL" / "DOCPACK"
     created, skipped = [], []

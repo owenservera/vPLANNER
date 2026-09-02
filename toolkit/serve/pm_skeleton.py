@@ -108,8 +108,12 @@ def run(cfg: dict | None = None) -> dict:
     corpus_root = Path(cfg["paths"]["corpus_root"])
     if not corpus_root.is_absolute():
         corpus_root = (common.V4_ROOT / corpus_root).resolve()
-    prog = corpus_root / "70-PROGRAM"
-    if not corpus_root.exists():
+    is_generic = "data-lab" in str(corpus_root)
+    if is_generic:
+        prog = common.V4_ROOT / "data" / "program"
+    else:
+        prog = corpus_root / "70-PROGRAM"
+    if not corpus_root.exists() and not is_generic:
         prog = common.V4_ROOT.parents[1] / "70-PROGRAM"
 
     created: list[str] = []

@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Pre-commit hook: ensure TEMPLATE-UNIVERSE.json is not stale."""
+import subprocess, sys
+from pathlib import Path
+
+# Resolve toolkit root (pre-commit runs from repo root)
+repo_root = Path(__file__).resolve().parents[1]
+toolkit = repo_root / "toolkit"
+engine = toolkit / "docs" / "plans" / "template-universe-engine" / "engine" / "generate.py"
+
+if not engine.exists():
+    sys.exit(0)
+
+# Run --check
+result = subprocess.run([sys.executable, str(engine), "--check"], cwd=str(toolkit), capture_output=True, text=True)
+if result.returncode != 0:
+    print(result.stdout)
+    print(result.stderr)
+    print("\n✗ TEMPLATE-UNIVERSE.json is stale — run:")
+    print("  python toolkit/docs/plans/template-universe-engine/engine/generate.py")
+    print("  git add toolkit/docs/plans/template-universe-engine/universe/TEMPLATE-UNIVERSE.json")
+    sys.exit(1)
+
+print("✓ template universe up to date")

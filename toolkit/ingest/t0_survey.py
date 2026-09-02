@@ -82,12 +82,10 @@ def run(cfg: dict) -> dict:
     # Load existing tracker for incremental merge (keep statuses for known paths)
     existing = ledger.load(cfg)
     prior_by_path: dict[str, dict] = {r["path"]: r for r in existing.get("rows", [])}
-    # Also load prior sha cache for incremental hashing
-    # If a file's mtime and size match prior, reuse sha without re-hashing
+    # Prior mtime+size cache for incremental hashing (O6: store mtime, not size-only)
     prior_mtime: dict[str, tuple[float, int, str]] = {}
     for r in existing.get("rows", []):
-        # We stored sha; try to use file mtime to skip re-hash
-        prior_mtime[r["path"]] = (0, r.get("bytes", 0), r.get("sha256") or "")
+        prior_mtime[r["path"]] = (r.get("mtime", 0) or 0, r.get("bytes", 0), r.get("sha256") or "")
 
     seen_hash: dict[str, str] = {}
     rows: list[dict] = []
@@ -131,8 +129,13 @@ def run(cfg: dict) -> dict:
         # Skip files inside code trees — they are batch-processed by adapter
         if any(p.is_relative_to(ct) for ct in code_trees_found):
             continue
-        # Skip generated artifacts that self-pollute corpus (CONTROL-CENTER.html written to corpus_root in legacy VIVIM path)
+        # Skip generated artifacts that self-pollute corpus (CONTROL-CENTER.html, DOCPACK, PROGRAM written to corpus_root in legacy VIVIM path)
         if rel.endswith("CONTROL-CENTER.html") and ("DOCPACK" in rel or "control-center" in rel.lower()):
+            continue
+        if rel.startswith("60-CANONICAL/") or rel.startswith("70-PROGRAM/"):
+            # Generated docpack/program — never treat as corpus (when corpus_root is generic data-lab)
+            # For legacy VIVIM corpora that legitimately have these dirs, the user should point corpus_root elsewhere
+            # This guard prevents recursion: docpack written to data-lab would be re-ingested as corpus
             continue
         if rel.endswith(".gitkeep"):
             continue
@@ -223,19 +226,18 @@ def run(cfg: dict) -> dict:
             rows.append(row)
             continue
 
-        # Normal file — hash with incremental check (mtime+size)
+        # Normal file — hash with incremental check (mtime+size) — O6: mtime-aware
         n += 1
         src_id = f"SRC-{n:03d}"
-        # Check if we can reuse prior sha (same path, same size, mtime close)
         prior = prior_by_path.get(rel)
         sha = None
         if prior and prior.get("bytes") == size and prior.get("sha256"):
-            # Reuse — but verify file hasn't changed by mtime if available
             try:
                 mtime = p.stat().st_mtime
-                # If we had stored mtime, compare; otherwise re-hash conservatively
-                # For now, reuse if size matches (fast path for unchanged corpus)
-                sha = prior["sha256"]
+                prior_mtime_val, prior_bytes, prior_sha = prior_mtime.get(rel, (0, 0, ""))
+                # Reuse only if mtime matches (within 1s tolerance for FS granularity) and size matches
+                if abs(mtime - prior_mtime_val) < 0.01 and prior_bytes == size:
+                    sha = prior_sha
             except OSError:
                 sha = None
 
@@ -260,6 +262,10 @@ def run(cfg: dict) -> dict:
 
         row = ledger.new_row(src_id, rel, category_of(rel), size, sha)
         row["source_type"] = source_type
+        try:
+            row["mtime"] = p.stat().st_mtime
+        except OSError:
+            row["mtime"] = 0
         # Dedup check: exact sha match → SKIPPED-EXACT-DUP
         if sha in seen_hash:
             row["dup_of"] = seen_hash[sha]

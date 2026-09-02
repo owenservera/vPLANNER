@@ -79,8 +79,6 @@ STAGES = [
     ("t3_extract",       lambda cfg: t3_extract.run(cfg)),
     ("t4_conflicts",     lambda cfg: conflicts.run(cfg)),
     ("t4b_consolidate",  lambda cfg: consolidate.run(cfg)),
-    ("t5_ratify",        lambda cfg: rollup.run(cfg) and docpack.run(cfg) and pm_skeleton.run(cfg)),
-    # Note: ratify is a compound stage for simplicity — in production separate
     ("plan",             lambda cfg: plan_gen.run(cfg)),
     ("rollup",           lambda cfg: rollup.run(cfg)),
     ("control_center",   lambda cfg: control_center.run(cfg)),
@@ -132,6 +130,19 @@ def main():
     cfg = tomlite.load()
     sp = state_path(cfg)
     state = common.read_json(sp, default={"done": [], "last": None})
+
+    # Template Universe header (advisory, never blocks) — show expected landing spots on dry-run
+    if args.dry_run:
+        try:
+            _u_path = common.V4_ROOT / "docs" / "plans" / "template-universe-engine" / "universe" / "TEMPLATE-UNIVERSE.json"
+            if _u_path.exists():
+                import json as _json
+                _u = _json.loads(_u_path.read_text(encoding="utf-8"))
+                common.log(f"template universe: {_u['meta']['rounds_total']} rounds, {_u['meta']['tables_total']} tables, sha {_u['meta']['toolkit_sha']} (derived, never hand-edit)", "info")
+            else:
+                common.log("template universe: not yet generated — run: python docs/plans/template-universe-engine/engine/generate.py", "warn")
+        except Exception:
+            pass
 
     if args.force:
         state = {"done": [], "last": None}
@@ -195,14 +206,9 @@ def main():
         common.write_json(sp, {"done": state.get("done", []), "last": state.get("last")})
         return
 
-    # Full pipeline (with budget advisory awareness)
+    # Full pipeline (flattened, no compound awkwardness)
     start_time = time.time()
     for name, fn in STAGES:
-        # Skip stages that are compound (ratify runs rollup+plan+control_center later separately)
-        if name in ("t5_ratify",):
-            # Ratify is compound; we handle it through rollup + plan + control_center separately
-            # Skip here to avoid double-run; rollup handles it
-            pass
         if name in state.get("done", []) and not args.force:
             common.log(f"skip (done): {name}")
             continue
@@ -211,10 +217,6 @@ def main():
             continue
         common.log(f"== stage {name} ==")
         try:
-            # For compound stages, pass publish/watch flags only if needed
-            if name == "rollup" and args.publish:
-                # rollup doesn't take args directly — publish handled by control_center
-                pass
             fn(cfg)
         except Exception as e:
             import traceback
@@ -230,33 +232,36 @@ def main():
             state.setdefault("done", []).append(name)
         state["last"] = name
 
-    # Final rollup after all extract/assess stages
-    try:
-        # Always run rollup to refresh derived outputs (idempotent)
-        rollup.run(cfg)
-    except Exception as e:
-        common.log(f"rollup failed: {e}", "warn")
-
-    # Plan (if not done)
-    if "plan" not in state.get("done", []) or args.force:
+    # Final rollup after all extract/assess stages (skip on --dry-run)
+    if not args.dry_run:
         try:
-            common.log("== stage plan ==")
-            plan_gen.run(cfg)
-            if "plan" not in state.get("done", []):
-                state.setdefault("done", []).append("plan")
-            state["last"] = "plan"
+            # Always run rollup to refresh derived outputs (idempotent)
+            rollup.run(cfg)
         except Exception as e:
-            common.log(f"plan failed: {e}", "err")
+            common.log(f"rollup failed: {e}", "warn")
 
-    # Control center (lazy, always rebuild at end; never blocks due to budgets)
-    try:
-        common.log("== stage control_center ==")
-        control_center.run(cfg, publish=args.publish)
-        if "control_center" not in state.get("done", []):
-            state.setdefault("done", []).append("control_center")
-        state["last"] = "control_center"
-    except Exception as e:
-        common.log(f"control_center failed: {e}", "err")
+        # Plan (if not done)
+        if "plan" not in state.get("done", []) or args.force:
+            try:
+                common.log("== stage plan ==")
+                plan_gen.run(cfg)
+                if "plan" not in state.get("done", []):
+                    state.setdefault("done", []).append("plan")
+                state["last"] = "plan"
+            except Exception as e:
+                common.log(f"plan failed: {e}", "err")
+
+        # Control center (lazy, always rebuild at end; never blocks due to budgets)
+        try:
+            common.log("== stage control_center ==")
+            control_center.run(cfg, publish=args.publish)
+            if "control_center" not in state.get("done", []):
+                state.setdefault("done", []).append("control_center")
+            state["last"] = "control_center"
+        except Exception as e:
+            common.log(f"control_center failed: {e}", "err")
+    else:
+        common.log("DRY RUN — would run rollup + plan + control_center", "ok")
 
     state["updated"] = common.now_iso()
     sp.parent.mkdir(parents=True, exist_ok=True)

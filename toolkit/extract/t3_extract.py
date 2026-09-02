@@ -122,17 +122,21 @@ def _process_one(args) -> dict:
     # Dedup set (passed as copy — worker adds locally, main merges)
     dedup = set(existing_ids)
 
-    # Need a minimal funnel engine for verbatim-gate logging (writes to log — ok concurrent append)
-    # Use a dummy funnel that just counts, not logs, in workers to avoid contention
-    class _NoopFunnel:
+    # Funnel for verbatim-gate logging — collect in workers, main thread logs (O5)
+    class _CollectingFunnel:
+        def __init__(self):
+            self.dispatched: list = []
         def dispatch(self, w):
+            self.dispatched.append(w)
             return None
 
+    funnel_collector = _CollectingFunnel()
     frag_dir_str = cfg_dict["paths"]["fragments_dir"]
     # Resolve frag_dir
     frag_dir = (common.V4_ROOT / frag_dir_str).resolve() if not Path(frag_dir_str).is_absolute() else Path(frag_dir_str)
 
-    frags = extract_engine.process_sections(sections, source_text, row, cfg_dict, dedup, frag_dir, _NoopFunnel(), patterns)
+    frags = extract_engine.process_sections(sections, source_text, row, cfg_dict, dedup, frag_dir, funnel_collector, patterns)
+    _rejected = sum(1 for w in funnel_collector.dispatched if w.kind == "verbatim-gate-reject")
     # Also extract code blocks as supplementary fragments (for md sources)
     if adapter_kind == "md":
         code_blocks = transcript_adapter.extract_code_blocks_from_text(source_text)
@@ -174,7 +178,7 @@ def _process_one(args) -> dict:
             conf = sum(ff["confidence"] for ff in dict_frags) / len(dict_frags)
 
     return {"src_id": row["id"], "frag_count": len(frags), "confidence": round(conf, 3),
-            "new_ids": new_ids, "error": None}
+            "new_ids": new_ids, "rejected": _rejected, "error": None}
 
 
 def run(cfg: dict) -> dict:
@@ -226,10 +230,12 @@ def run(cfg: dict) -> dict:
                 args = [(r, corpus_str, cfg, list(dedup)) for r in batch]
                 with multiprocessing.Pool(processes=min(4, len(batch))) as pool:
                     batch_results = pool.map(_process_one, args)
-                # Merge dedup
+                # Merge dedup and surface verbatim-gate rejections (O5)
                 for res in batch_results:
                     for nid in res.get("new_ids", []):
                         dedup.add(nid)
+                    if res.get("rejected", 0):
+                        eng.dispatch(funnel.WorkItem(kind="verbatim-gate-reject", src_id=res.get("src_id",""), confidence=0.0, detail=f"{res['rejected']} fragments rejected (no verbatim anchor)"))
                 results.extend(batch_results)
                 common.log(f"extract: batch {i//batch_size+1}/{(len(targets)+batch_size-1)//batch_size} done", "info")
         except Exception as e:
@@ -244,8 +250,10 @@ def run(cfg: dict) -> dict:
                 res = _process_one((row, str(corpus_root), cfg, list(dedup)))
                 for nid in res.get("new_ids", []):
                     dedup.add(nid)
+                if res.get("rejected", 0):
+                    eng.dispatch(funnel.WorkItem(kind="verbatim-gate-reject", src_id=res.get("src_id",""), confidence=0.0, detail=f"{res['rejected']} fragments rejected (no verbatim anchor)"))
                 results.append(res)
-                common.log(f"  {row['id']} -> {res['frag_count']} fragments", "info")
+                common.log(f"  {row['id']} -> {res['frag_count']} fragments ({res.get('rejected',0)} rejected)", "info")
 
     # Rebuild _index.jsonl from per-fragment files (authoritative, dedup-safe)
     # Instead of appending incrementally (which is racy), rebuild from disk
