@@ -74,7 +74,7 @@ KIND_MAP = {
     "HF-": "feedback",
 }
 
-# Stage definitions from run_all.py — order matters
+# Stage definitions from run_all.py — order matters (flattened, no t5_ratify compound)
 STAGES_DEF = [
     ("t0_survey", "ingest/t0_survey.py", "survey"),
     ("t1_scope_scan", "ingest/t1_scope_scan.py", "survey"),
@@ -84,7 +84,8 @@ STAGES_DEF = [
     ("t3_extract", "extract/t3_extract.py", "extraction"),
     ("t4_conflicts", "assess/conflicts.py", "assessment"),
     ("t4b_consolidate", "assess/consolidate.py", "assessment"),
-    ("t5_ratify", "serve/rollup.py", "population"),  # compound
+    ("docpack", "serve/docpack.py", "population"),
+    ("pm_skeleton", "serve/pm_skeleton.py", "population"),
     ("plan", "plan/generator.py", "population"),
     ("rollup", "serve/rollup.py", "population"),
     ("control_center", "serve/control_center.py", "freeze"),
@@ -234,6 +235,8 @@ def discover_outputs_for_stage(stage_module: str) -> list[dict]:
         "extract/t3_extract.py": ["data/fragments/_index.jsonl", "data/fragments/_code-index.jsonl", "data/fragments/{SRC-ID}/{fragment_id}.json"],
         "assess/conflicts.py": ["data/conflicts.json", "data/dup-ledger.json"],
         "assess/consolidate.py": ["data/consolidated.json"],
+        "serve/docpack.py": ["data/docpack/00_STATUS.md", "data/docpack/01_VISION.md", "data/docpack/21_DECISIONS/_TEMPLATE.md"],
+        "serve/pm_skeleton.py": ["data/program/00_CHARTER.md", "data/program/02_WORKSTREAMS.md", "data/program/workstreams/{WS-ID}/00_BRIEF.md"],
         "serve/rollup.py": ["data/status.json", "data/INDEX.md", "data/budget.json", "data/escalations.json"],
         "plan/generator.py": ["data/atomic-units.json", "data/dependency-edges.json", "data/dispatch-plan.json", "data/atomic-task-list.json"],
         "serve/control_center.py": ["data/control-center.html", "data/cc-data.json", "data/cc-round.json", "data/history/round-N.html"],

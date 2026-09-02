@@ -1,10 +1,10 @@
 {
   "meta": {
-    "generated_at": "2026-09-02T23:11:53.649927Z",
-    "toolkit_sha": "68c596ef3468",
+    "generated_at": "2026-09-02T23:19:27.171821Z",
+    "toolkit_sha": "84c7dd80b1ef",
     "vplanner_version": "v4",
     "rounds_total": 6,
-    "tables_total": 30,
+    "tables_total": 36,
     "engine": "template-universe-engine/generate.py (stdlib-only)"
   },
   "stages": {
@@ -194,52 +194,55 @@
         }
       ]
     },
-    "t5_ratify": {
-      "stage_id": "t5_ratify",
-      "module": "serve/rollup.py",
+    "docpack": {
+      "stage_id": "docpack",
+      "module": "serve/docpack.py",
       "round_stage": "population",
       "cc_module": "M6",
       "order": 8,
       "outputs": [
         {
-          "path_template": "data/INDEX.md",
+          "path_template": "data/docpack/00_STATUS.md",
           "kind": "unknown",
           "schema": null,
           "condition": "always"
         },
         {
-          "path_template": "data/budget.json",
-          "kind": "rollup",
+          "path_template": "data/docpack/01_VISION.md",
+          "kind": "unknown",
           "schema": null,
           "condition": "always"
         },
         {
-          "path_template": "data/conflicts.json",
-          "kind": "conflict",
+          "path_template": "data/docpack/21_DECISIONS/_TEMPLATE.md",
+          "kind": "unknown",
           "schema": null,
-          "condition": "if_extracted"
-        },
+          "condition": "always"
+        }
+      ]
+    },
+    "pm_skeleton": {
+      "stage_id": "pm_skeleton",
+      "module": "serve/pm_skeleton.py",
+      "round_stage": "population",
+      "cc_module": "M6",
+      "order": 9,
+      "outputs": [
         {
-          "path_template": "data/consolidated.json",
-          "kind": "consolidation",
-          "schema": null,
-          "condition": "if_assessed"
-        },
-        {
-          "path_template": "data/escalation-log.jsonl",
-          "kind": "ledger",
+          "path_template": "data/program/00_CHARTER.md",
+          "kind": "unknown",
           "schema": null,
           "condition": "always"
         },
         {
-          "path_template": "data/escalations.json",
-          "kind": "rollup",
+          "path_template": "data/program/02_WORKSTREAMS.md",
+          "kind": "unknown",
           "schema": null,
           "condition": "always"
         },
         {
-          "path_template": "data/status.json",
-          "kind": "rollup",
+          "path_template": "data/program/workstreams/{WS-ID}/00_BRIEF.md",
+          "kind": "unknown",
           "schema": null,
           "condition": "always"
         }
@@ -250,7 +253,7 @@
       "module": "plan/generator.py",
       "round_stage": "population",
       "cc_module": "M6",
-      "order": 9,
+      "order": 10,
       "outputs": [
         {
           "path_template": "data/atomic-task-list.json",
@@ -301,7 +304,7 @@
       "module": "serve/rollup.py",
       "round_stage": "population",
       "cc_module": "M6",
-      "order": 10,
+      "order": 11,
       "outputs": [
         {
           "path_template": "data/INDEX.md",
@@ -352,7 +355,7 @@
       "module": "serve/control_center.py",
       "round_stage": "freeze",
       "cc_module": "M7",
-      "order": 11,
+      "order": 12,
       "outputs": [
         {
           "path_template": "data/budget.json",
@@ -609,7 +612,8 @@
         "M6"
       ],
       "stages": [
-        "t5_ratify",
+        "docpack",
+        "pm_skeleton",
         "plan",
         "rollup"
       ],
@@ -625,6 +629,9 @@
         "data/discovery/clusters.json",
         "data/discovery/discovery-summary.json",
         "data/dispatch-plan.json",
+        "data/docpack/00_STATUS.md",
+        "data/docpack/01_VISION.md",
+        "data/docpack/21_DECISIONS/_TEMPLATE.md",
         "data/dup-ledger.json",
         "data/entity-packs/discovered.json",
         "data/escalation-log.jsonl",
@@ -635,12 +642,15 @@
         "data/ke-cache.json",
         "data/ke-scan-summary.json",
         "data/ke-terms.json",
+        "data/program/00_CHARTER.md",
+        "data/program/02_WORKSTREAMS.md",
+        "data/program/workstreams/{WS-ID}/00_BRIEF.md",
         "data/scope/scan-model.json",
         "data/scope/scope.json",
         "data/status.json",
         "data/tracker.json"
       ],
-      "cumulative_count": 25
+      "cumulative_count": 31
     },
     "freeze": {
       "round_stage": "freeze",
@@ -673,6 +683,9 @@
         "data/discovery/clusters.json",
         "data/discovery/discovery-summary.json",
         "data/dispatch-plan.json",
+        "data/docpack/00_STATUS.md",
+        "data/docpack/01_VISION.md",
+        "data/docpack/21_DECISIONS/_TEMPLATE.md",
         "data/dup-ledger.json",
         "data/entity-packs/discovered.json",
         "data/escalation-log.jsonl",
@@ -684,12 +697,15 @@
         "data/ke-cache.json",
         "data/ke-scan-summary.json",
         "data/ke-terms.json",
+        "data/program/00_CHARTER.md",
+        "data/program/02_WORKSTREAMS.md",
+        "data/program/workstreams/{WS-ID}/00_BRIEF.md",
         "data/scope/scan-model.json",
         "data/scope/scope.json",
         "data/status.json",
         "data/tracker.json"
       ],
-      "cumulative_count": 30
+      "cumulative_count": 36
     }
   },
   "universe": [
@@ -714,7 +730,6 @@
       ],
       "condition": "always",
       "writers": [
-        "t5_ratify",
         "rollup"
       ]
     },
@@ -752,7 +767,6 @@
       ],
       "condition": "always",
       "writers": [
-        "t5_ratify",
         "plan",
         "rollup",
         "control_center"
@@ -795,7 +809,6 @@
       "writers": [
         "t4_conflicts",
         "t4b_consolidate",
-        "t5_ratify",
         "rollup",
         "control_center"
       ]
@@ -812,7 +825,6 @@
       "condition": "if_assessed",
       "writers": [
         "t4b_consolidate",
-        "t5_ratify",
         "plan",
         "rollup",
         "control_center"
@@ -895,6 +907,42 @@
       ]
     },
     {
+      "path_template": "data/docpack/00_STATUS.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "docpack"
+      ]
+    },
+    {
+      "path_template": "data/docpack/01_VISION.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "docpack"
+      ]
+    },
+    {
+      "path_template": "data/docpack/21_DECISIONS/_TEMPLATE.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "docpack"
+      ]
+    },
+    {
       "path_template": "data/dup-ledger.json",
       "kind": "conflict",
       "schema": null,
@@ -932,7 +980,6 @@
       "condition": "always",
       "writers": [
         "t0_survey",
-        "t5_ratify",
         "rollup",
         "control_center"
       ]
@@ -947,7 +994,6 @@
       ],
       "condition": "always",
       "writers": [
-        "t5_ratify",
         "plan",
         "rollup",
         "control_center"
@@ -1040,6 +1086,42 @@
       ]
     },
     {
+      "path_template": "data/program/00_CHARTER.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "pm_skeleton"
+      ]
+    },
+    {
+      "path_template": "data/program/02_WORKSTREAMS.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "pm_skeleton"
+      ]
+    },
+    {
+      "path_template": "data/program/workstreams/{WS-ID}/00_BRIEF.md",
+      "kind": "unknown",
+      "schema": null,
+      "rounds": [
+        "population"
+      ],
+      "condition": "always",
+      "writers": [
+        "pm_skeleton"
+      ]
+    },
+    {
       "path_template": "data/scope/scan-model.json",
       "kind": "scope",
       "schema": null,
@@ -1074,7 +1156,6 @@
       ],
       "condition": "always",
       "writers": [
-        "t5_ratify",
         "rollup",
         "control_center"
       ]
