@@ -1,0 +1,23 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "feedback-draft",
+  "type": "object",
+  "required": ["id", "at", "status", "provenance", "target", "body"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^HF-\\d{4}$"},
+    "at": {"type": "string", "minLength": 1},
+    "status": {"type": "string", "enum": ["DRAFT"]},
+    "provenance": {"type": "string", "enum": ["HUMAN-UI"]},
+    "target": {
+      "type": "object",
+      "required": ["type", "id"],
+      "properties": {
+        "type": {"type": "string", "enum": ["module", "workstream", "task", "decision", "risk", "scope_rule", "general"]},
+        "id": {"type": "string", "minLength": 1}
+      }
+    },
+    "body": {"type": "object"},
+    "round_context": {"type": "integer"}
+  },
+  "additionalProperties": true
+}

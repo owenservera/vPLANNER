@@ -1,0 +1,39 @@
+{
+  "_comment": "VIVIM-specific entity patterns — optional domain pack. Reference in config.toml [extraction] entity_packs = [\"generic\", \"vivim\"] to enable. Not loaded by default (project-agnostic).",
+  "capability": [
+    "cap:[a-z0-9_.\\-]+",
+    "\\bcapabilit(?:y|ies)\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "algorithm": [
+    "\\b(?:FINGERPRINT|SCHEMA[- ]INFERENCE|FRAMING[- ]REASSEMBLY|EVIDENCE[- ]FUSION|PROTOCOL[- ]GRAMMAR|SCHEMA[- ]MATCHING|STREAM[- ]RECONSTRUCTION|BATCHEXECUTE)\\b"
+  ],
+  "contract": [
+    "\\bSurfaceContract\\w*\\b",
+    "\\bStreamContract\\w*\\b",
+    "\\bOperationRealization\\w*\\b",
+    "\\bDomainPack\\w*\\b"
+  ],
+  "model": [
+    "\\b[A-Z][a-zA-Z]{2,}(?:Store|Engine|Compiler|Orchestrator|Governor)\\b"
+  ],
+  "vivim_ke": {
+    "axiom": ["AX-\\d{3}"],
+    "k_item": ["\\bK-\\d{2}\\b"],
+    "ct_item": ["CT-\\d{3}"],
+    "kernel_word": ["\\bkernel\\b", "\\bconstitution\\b", "\\bconstitutional\\b", "\\baxiom"],
+    "kernel_registry": ["KernelRegistry", "kernel-registry"],
+    "governor": ["ChromeGovernor", "chrome-governor", "governor\\."],
+    "kernel_docset": ["KERNEL CANONICAL", "# KERNEL", "K-01\\.\\."],
+    "in_scope": ["discovery", "self-healing", "self healing", "provider", "surface contract", "stream contract", "domain pack", "fingerprint", "perception", "observation", "inference", "mapping", "verification", "healing", "orchestrator"]
+  },
+  "vivim_scope_clusters": {
+    "C1": {"name": "Discovery + self-healing canonical system", "disposition": "EXTRACT"},
+    "C2": {"name": "KERNEL complete independent design (K/AX/CT axioms)", "disposition": "SKIP"},
+    "C3": {"name": "Integration boundary references (KernelRegistry, ChromeGovernor, CDP)", "disposition": "REF-ONLY"},
+    "C4": {"name": "HARVEST study (build-vs-harvest sourcing)", "disposition": "EXTRACT"},
+    "C5": {"name": "Session/transcript history", "disposition": "EXTRACT"},
+    "C6": {"name": "Code trees + archives", "disposition": "PARKED"},
+    "C7": {"name": "toolkit.md + process docs", "disposition": "SKIP"},
+    "C8": {"name": "HARVES kernel-track agent workspace", "disposition": "SKIP"}
+  }
+}

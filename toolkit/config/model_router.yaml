@@ -1,0 +1,83 @@
+# FORGE Model Router Configuration
+# Single source of truth for tier -> concrete model mapping.
+# Edit this file when model lineups change. Never hardcode model names elsewhere.
+# Referenced by: toolkit/model_router.py
+
+version: 1
+updated: "2026-09-02"
+
+# Global default mapping. Any workstream without an override in `workstream_overrides`
+# uses this.
+global_default:
+  FLASH:
+    primary: "fast-tier"        # e.g. claude-haiku-4-5-20251001
+    fallback: null
+    cost_multiplier: 1
+  CAPABLE:
+    primary: "mid-tier"         # e.g. claude-sonnet-5
+    fallback: "FLASH"           # only with mandatory review checkpoint, see escalation policy below
+    cost_multiplier: 4
+  STRONG:
+    primary: "frontier-reasoning-tier"   # e.g. claude-opus-5
+    fallback: "CAPABLE"          # only with mandatory human CKPT-, never silent
+    cost_multiplier: 15
+  CREATIVE:
+    primary: "frontier-exploratory-tier" # same class as STRONG, higher temperature / more sampling
+    fallback: "STRONG"
+    cost_multiplier: 15
+
+# Per-workstream overrides. Example: code-heavy workstreams may want a
+# coding-specialized model at CAPABLE even though the global default is general-purpose.
+workstream_overrides:
+  WS-04:   # Code Inspection (CODE-TRACK)
+    CAPABLE:
+      primary: "coding-specialized-tier"
+      fallback: "mid-tier"
+  WS-05:   # Consolidation & Ratification
+    STRONG:
+      primary: "frontier-reasoning-tier"
+      fallback: null   # no fallback for ratification-adjacent judgment; escalate to human instead
+
+# Round-level defaults. If a unit has no explicit default_tier, inherit from its round.
+# See 40-PROGRAM-TEMPLATE/10_ROUND-PLAN.md for full rationale per round.
+round_defaults:
+  R0_SURVEY: FLASH
+  R1_INTENT_CLARIFICATION: CAPABLE
+  R2_ORGANIZATION: FLASH
+  R3_ASSET_SURVEY: CAPABLE
+  R4_SCOPE_GROUNDING: STRONG
+  R5_PM_SKELETON: CAPABLE          # sign-off sub-step forced to STRONG, see escalation rules
+  R6_DOCPACK_SCAFFOLD: FLASH
+  R7_GATED_EXTRACTION: CAPABLE     # dedup/conflict gate sub-step forced to STRONG
+  R8_ASSESSMENT: STRONG
+  R9_POPULATION: STRONG            # polish sub-stage may drop to CAPABLE, never below
+  R10_FREEZE_HANDOFF: FLASH
+  VISION_PRD_NARRATIVE: CREATIVE
+  CONTROL_CENTER_REGEN: FLASH
+
+# Deterministic auto-escalation rules. Each rule, if true at dispatch time, bumps
+# the unit exactly one tier (FLASH->CAPABLE->STRONG->CREATIVE is NOT a valid escalation
+# path -- CREATIVE is a lateral category, not "above" STRONG; escalation targets STRONG
+# as its ceiling unless the primitive_type is explicitly generative).
+# Every firing writes an ESC- record. De-escalation is never automatic.
+escalation_rules:
+  - id: touches_ratified_doc
+    condition: "target_doc.status == 'RATIFIED'"
+    escalate_to_minimum: STRONG
+  - id: resolves_conflict
+    condition: "primitive_type == 'backlog_item' and unit.resolves_conflicts_json_entry == true"
+    escalate_to_minimum: STRONG
+  - id: high_fan_in
+    condition: "count(dependency_edges where to == unit.unit_id) >= 5"
+    escalate_by: 1
+  - id: repeat_failure
+    condition: "unit.retry_count >= 2"
+    escalate_by: 1
+  - id: isg_signoff_question
+    condition: "unit.tags contains 'ISG_SIGNOFF'"
+    escalate_to_minimum: STRONG
+
+# De-escalation policy: manual only, must cite a DCL- decision id.
+deescalation_policy:
+  automatic: false
+  requires: "DCL- decision id citing reason (typically: mechanical rework, spec now frozen)"

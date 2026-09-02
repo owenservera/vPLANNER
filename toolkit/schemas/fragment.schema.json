@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "V4 Fragment",
+  "description": "Provenance-backed fragment. Verbatim must be exact substring of source.",
+  "type": "object",
+  "required": ["fragment_id", "src_id", "src_path", "src_sha256", "entity", "entity_key", "kind", "anchor", "verbatim", "verbatim_sha256", "confidence", "status"],
+  "properties": {
+    "fragment_id": {"type": "string", "pattern": "^[0-9a-f]{16}$"},
+    "src_id": {"type": "string", "pattern": "^SRC-\\d+"},
+    "src_path": {"type": "string", "minLength": 1},
+    "src_sha256": {"type": "string", "minLength": 8},
+    "entity": {"type": "string", "minLength": 1},
+    "entity_key": {"type": "string", "minLength": 1},
+    "kind": {"type": "string", "enum": ["requirement", "component", "decision", "risk", "interface", "code_symbol", "code_file", "capability", "algorithm", "contract", "model", "generic"]},
+    "anchor": {"type": "string"},
+    "verbatim": {"type": "string", "minLength": 1},
+    "verbatim_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+    "status": {"type": "string", "enum": ["NAIVE", "CONSOLIDATED", "RATIFIED", "SUPERSEDED"]},
+    "created_at": {"type": "string"}
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forge.local/schemas/model-tier.schema.json",
+  "title": "ModelTier",
+  "description": "The four-tier capability primitive. See 00-CORE/00_DESIGN.md section 1.1.",
+  "type": "string",
+  "enum": ["FLASH", "CAPABLE", "STRONG", "CREATIVE"],
+  "tierDescriptions": {
+    "FLASH": "High-volume, low-ambiguity, mechanical transforms.",
+    "CAPABLE": "Standard implementation work with a clear spec.",
+    "STRONG": "Judgment-heavy or cross-cutting work; adjudication; ratification.",
+    "CREATIVE": "Open-ended generation with no single correct answer."
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "_comment": "Project-agnostic KE signatures. Define YOUR out-of-scope vs in-scope signals here. If empty, ke_scan runs in CLEAN passthrough (never blocks). This file is generic — VIVIM example is in entity-packs/vivim.json",
+  "axiom": [],
+  "k_item": [],
+  "ct_item": [],
+  "kernel_word": [],
+  "kernel_registry": [],
+  "governor": [],
+  "kernel_docset": [],
+  "in_scope": []
+}

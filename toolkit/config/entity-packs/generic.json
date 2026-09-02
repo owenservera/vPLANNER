@@ -1,0 +1,36 @@
+{
+  "_comment": "Generic entity patterns — project-agnostic defaults. Used when no domain pack is selected. Add domain packs as separate files (e.g. vivim.json) and reference them in config.toml [extraction] entity_packs = [\"generic\", \"vivim\"]",
+  "requirement": [
+    "\\bREQ-[A-Z0-9]+\\b",
+    "\\bDOC-\\d{1,2}\\b",
+    "\\brequirement[s]?\\s+[A-N]\\b"
+  ],
+  "component": [
+    "\\b[A-Z][a-zA-Z]{2,}(?:Service|Engine|Store|Controller|Manager|Handler|Provider)\\b",
+    "\\bcomponent\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "decision": [
+    "\\bDCL-\\d+\\b",
+    "\\bADR-\\d+\\b",
+    "\\bdecision\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "risk": [
+    "\\bRSK-\\d+\\b",
+    "\\bRISK-\\d+\\b",
+    "\\brisk\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "interface": [
+    "\\b[A-Z][a-zA-Z]{2,}(?:Contract|Interface|API|Schema)\\b",
+    "\\binterface\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "code_symbol": [
+    "\\b(?:class|interface|type|enum)\\s+([A-Z][A-Za-z0-9_]+)\\b"
+  ],
+  "capability": [
+    "cap:[a-z0-9_.\\-]+",
+    "\\bcapabilit(?:y|ies)\\b[:\\s][A-Za-z0-9 _\\-]{3,60}"
+  ],
+  "algorithm": [
+    "\\b[A-Z][A-Z_\\-]{3,40}\\b"
+  ]
+}

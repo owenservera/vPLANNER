@@ -1,0 +1,129 @@
+# V4 CONFIG SPEC — Single Source of Truth
+
+> `v4/config/config.toml` (parsed by `core/tomlite.py`, stdlib subset) + `model_router.yaml` (tier→model only) + entity packs + scope seed.
+> Blind-start: entity packs and scope clusters are **discovered from the corpus** — the generic seed is an empty PARKED template.
+> Canon: one config surface for thresholds/paths/behavior; the router YAML is isolated because it is the *only* thing that changes when model lineups change.
+
+---
+
+## 1. `config.toml` Reference
+
+### `[paths]`
+| Key | Default | Meaning |
+|---|---|---|
+| `corpus_root` | `"../../"` | **The one input.** Absolute or relative to `v4/`. Any folder with random docs |
+| `data_dir` | `"data"` | Generated-artifact root (`v4/data/`) |
+| `fragments_dir` | `"data/fragments"` | Fragment store |
+| `chat_exports` | `"../../30-SESSIONS"` | Optional hint; transcripts are also auto-detected in the walk |
+| `code_trees` | `[]` | Optional explicit code-tree paths; top-level code trees are **also auto-detected heuristically** (see `[discovery]`) |
+
+No VIVIM directory names in defaults. `chat_exports` / `code_trees` are optional hints; the walk finds files regardless.
+
+### `[thresholds]` — funnel ladder
+`t_auto=0.90 → T0` · `t_cheap=0.60 → T1` · `t_llm=0.30 → T2` · below → T3. Tune from `escalation-log.jsonl` data.
+
+### `[ke]` — only consulted when KE is active (opt-in)
+`axiom_kernel_min=5` · `kernel_word_min=3` · `in_scope_min=2`. Ignored on blind start when `scope_terms` empty.
+
+### `[scope_terms]` — **project-agnostic scope filter (OPT-IN, not default)**
+```toml
+out_of_scope = []   # e.g. ["kernel", "AX-\\d{3}"] for a VIVIM-like corpus — empty = disabled
+in_scope     = []   # e.g. ["discovery", "fingerprint"] — empty = disabled
+```
+**Empty → KE passthrough (CLEAN, never blocks).** Blind start leaves this empty. Discovery does not use it — discovery clusters by heading/TF-IDF, not by scope terms.
+
+### `[discovery]` — **blind-start engine tuning**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `cluster_threshold` | `0.22` | Jaccard+cosine threshold for heading/TF-IDF clustering (lower → fewer, larger clusters) |
+| `max_clusters` | `8` | Cap on discovered clusters (merges smallest beyond cap) |
+| `min_cluster_size` | `1` | Smallest cluster kept (1 = singletons allowed) |
+
+### `[limits]`
+| Key | Default | Meaning |
+|---|---|---|
+| `max_verbatim_chars` | 4000 | Fragment verbatim cap |
+| `max_file_bytes` | 4000000 | Oversize gate → head+tail sampling at extract (still hashed for dedup) |
+| `sample_per_category` | 8 | Discovery scope-scan sample size per top-level category |
+| `sample_seed` | 42 | Deterministic sampling |
+
+### `[source_priority]` — **empty on blind start**
+Path-prefix → int (higher wins consolidation). **No defaults shipped.** Discovery-derived priority is uniform (all 0) until the user or the discovery `path_hints` provides differentiation. Add your own if the corpus has meaningful priority tiers; otherwise leave empty for uniform treatment.
+
+### `[extraction]`
+`confidence_weights` inline table `{has_code=0.20, has_table=0.15, canonical_hint=0.15, contract_bonus=0.05}`. Optional `entity_packs = ["generic"]` (default). On blind start, `t1_discovery` emits `discovered` — effective load order becomes `generic + discovered`. Add `"vivim"` only for VIVIM corpora.
+
+### `[control_center]`
+`layers` (L0–L5), `publish_history`, `watch_poll_ms=3000`.
+
+### `[budgets]` — **UNCONSTRAINED BY DEFAULT (canon C4)**
+Empty section = no budget lines, `BUD-UNCONSTRAINED` placeholder emitted, CC hides burn-down, **no gate ever blocks**. Uncomment entries only for advisory tracking:
+```toml
+# "BUD-PH1" = 150000
+```
+
+---
+
+## 2. `model_router.yaml`
+
+Copied from `tookli-upgrade/` (fallback resolution if missing). Structure:
+
+```yaml
+global_default:        # tier → {primary: <label>, fallback: <label>}
+  FLASH: {primary: fast-tier}
+  CAPABLE: {primary: mid-tier}
+  STRONG: {primary: frontier-reasoning-tier}
+  CREATIVE: {primary: frontier-creative-tier}
+workstream_overrides:  # optional per-WS pinning
+round_defaults:        # optional round → tier
+escalation_rules:      # id + escalate_by / escalate_to_minimum
+deescalation_policy: manual_only
+```
+Labels are capability classes; the orchestrator binds label→concrete model at dispatch. Edit this file when models change — never plan data.
+
+## 3. Entity Packs — `config/entity-packs/*.json` + `data/entity-packs/discovered.json`
+
+Domain knowledge lives **here**, not in code (canon C1).
+
+| Pack | Content | Loaded when |
+|---|---|---|
+| `generic.json` | Default: `requirement` (REQ-/DOC-), `component` (*Service/Engine/Store/Controller/Manager/Handler/Provider*), `decision` (DCL-/ADR-), `risk` (RSK-/RISK-), `interface` (*Contract/Interface/API/Schema*), `code_symbol` (class/interface/type/enum), `capability`, `algorithm` (SCREAMING_CASE) | Always (fallback) |
+| `discovered.json` | **Generated by `t1_discovery`** from heading n-grams: frequent 2-3 word phrases → `component`/`interface` regexes + ID-like tokens observed in sample. Example: `{"component": ["\\bPayment(?:Service|Flow)\\b"], "interface": ["\\bCheckoutAPI\\b"]}` | Automatically when `extract` runs after discovery |
+| `vivim.json` | Opt-in VIVIM pack: FINGERPRINT-class algorithms, SurfaceContract-family, `vivim_ke` signature block (AX-/K-/CT-/KernelRegistry/ChromeGovernor), `vivim_scope_clusters` (C1–C8 reference) | Only when `entity_packs` includes `"vivim"` |
+
+Selection: `[extraction] entity_packs = ["generic"]` (default) — `discovered` is auto-loaded in addition whenever it exists. Explicit `"vivim"` adds the VIVIM vocabulary. Unknown keys (`_comment`, `vivim_ke`, …) ignored by the loader. Regex errors are swallowed per-pattern (corruption-tolerant).
+
+**Blind-start load order:** `generic.json` + `data/entity-packs/discovered.json` (if present) + any explicit opt-in packs → merged, dedup'd → fallback to `FALLBACK_PATTERNS` if all packs empty.
+
+## 4. `ke-signatures.json`
+
+Generic seed — **empty by default** (all groups `[]`). Populated groups merge with `[scope_terms]` at KE scan time. This file exists for fine-grained KE control; `scope_terms` is the primary opt-in knob. **Blind start: both empty → KE passthrough.** This file is not used by discovery.
+
+## 5. Scope Seed — `config/scope.json` vs `data/scope/scope.json` vs `data/discovery/clusters.json`
+
+- `config/scope.json` — the **empty template**: `status: DRAFT`, clusters empty or PARKED, no `path_hints`. Illustrates the shape only; never contains corpus-specific values
+- `data/discovery/clusters.json` — **discovery output**: C1..CN from heading/TF-IDF clustering, disposition PARKED, path_hints from member categories
+- `data/scope/scope.json` — **working scope**: discovery clusters promoted (on first run, identical to `clusters.json`). User ratifies via Control Center queue → `status: RATIFIED` → `SCOPE-GROUNDED.md`. Subsequent `t1_scope_scan`/`compile` cycles update this file
+- `data/scope/scan-model.json` — stratified sample that fed discovery (advisory, not a scope doc itself)
+
+`t1b_scope_apply` resolution order: `data/scope/scope.json` (discovered/ratified) → `data/discovery/clusters.json` → `config/scope.json` template → `{clusters:{}, path_hints:{}}` fallback. DRAFT applies with PARKED (not auto-EXTRACT).
+
+## 6. Config Resolution Order (code behavior)
+
+1. `core/tomlite.load()` reads `v4/config/config.toml`
+2. Router YAML: `v4/config/model_router.yaml` → fallback `tookli-upgrade/model_router.yaml` → `{}`
+3. Entity packs: `[extraction].entity_packs` (`["generic"]` default) + auto-load `data/entity-packs/discovered.json` if exists → `config/entity-packs/<name>.json` → fallback built-in `FALLBACK_PATTERNS`
+4. Scope: `data/scope/scope.json` (discovered/ratified) → `data/discovery/clusters.json` → `config/scope.json` seed → `{clusters:{}, path_hints:{}}`
+5. KE signatures: `config/ke-signatures.json` + `config.toml [scope_terms]` → merged before scan; if all empty → passthrough
+
+## 7. Adding a New Project (the agnostic / blind-start test)
+
+1. Set `[paths].corpus_root` to the new folder (any layout, any vocab, e.g. `/data/random-client-docs/`)
+2. Leave `[scope_terms]` empty and `[source_priority]` empty — **do not pre-configure for the corpus**
+3. `python run_all.py` → `t0_survey` discovers categories → `t1_scope_scan` samples → **`t1_discovery` generates clusters + discovered vocabulary**
+4. Open `data/control-center.html` → queue shows `discovered-cluster` items (one per cluster, PARKED) — **rule to EXTRACT/SKIP/REF-ONLY**
+5. `python serve/rulings_applier.py` → `scope.json` ratified → `python run_all.py --stage t1b_scope_apply && python run_all.py --stage t3_extract` → fragments flow using the discovered vocab
+6. Continue: conflicts → consolidation → plan → publish
+
+Zero code changes. Zero config pre-knowledge. That is the blind-start canon.

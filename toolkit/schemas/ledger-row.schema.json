@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "V4 Ledger Row",
+  "type": "object",
+  "required": ["id", "path", "category", "source_type", "status", "bytes", "sha256"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^SRC-\\d{3,}$"},
+    "path": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "minLength": 1},
+    "source_type": {"type": "string", "enum": ["DOC", "ARCHIVE", "CODE-INSPECTION", "TRANSCRIPT"]},
+    "status": {"type": "string", "enum": ["PENDING", "IN_PROGRESS", "DONE", "SKIPPED-EXACT-DUP", "FAILED", "HOLDING-MIXED", "DEFERRED-EXTRACT", "DEFERRED-CODE-TRACK"]},
+    "scope_disposition": {"type": ["string", "null"], "enum": ["EXTRACT", "SKIP", "REF-ONLY", "PARKED", null]},
+    "scope_cluster": {"type": ["string", "null"]},
+    "ke_class": {"type": ["string", "null"], "enum": ["KERNEL", "IN-SCOPE-REF", "MIXED", "NEEDS-REVIEW", "OUT-OF-SCOPE-CANDIDATE", "CLEAN", null]},
+    "tier": {"type": ["string", "null"], "enum": ["FLASH", "CAPABLE", "STRONG", "CREATIVE", null]},
+    "bytes": {"type": "integer", "minimum": 0},
+    "sha256": {"type": ["string", "null"]},
+    "dup_of": {"type": ["string", "null"]},
+    "fragment_count": {"type": "integer", "minimum": 0},
+    "confidence": {"type": "number", "minimum": 0},
+    "error": {"type": ["string", "null"]},
+    "processed_at": {"type": ["string", "null"]}
+  }
+}

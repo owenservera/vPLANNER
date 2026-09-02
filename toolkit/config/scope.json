@@ -1,0 +1,8 @@
+{
+  "_comment": "EMPTY TEMPLATE — shape only. t1_discovery generates the real scope from corpus headings. Dispositions are PARKED until ratified. VIVIM example clusters are in entity-packs/vivim.json (vivim_scope_clusters).",
+  "status": "DRAFT",
+  "compiled": "2026-09-02T00:00:00Z",
+  "project_statement": "Undiscovered — run t1_discovery to generate clusters from the corpus, then ratify via Control Center queue.",
+  "clusters": {},
+  "path_hints": {}
+}

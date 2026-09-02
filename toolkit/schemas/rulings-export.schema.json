@@ -1,0 +1,25 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "V4 Rulings Export",
+  "description": "Exported from Control Center queue. Dropped into scope/incoming/ and applied by rulings_applier.py",
+  "type": "object",
+  "required": ["exported_at", "round", "resolutions"],
+  "properties": {
+    "exported_at": {"type": "string"},
+    "round": {"type": "integer", "minimum": 0},
+    "resolutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["type", "target", "resolution"],
+        "properties": {
+          "type": {"type": "string", "enum": ["ke-class", "disposition", "mixed-batch", "interview", "conflict", "alias", "budget-breach", "escalation-review"]},
+          "target": {"type": "string", "minLength": 1},
+          "resolution": {"type": "string", "minLength": 1},
+          "note": {"type": "string"},
+          "item_id": {"type": "string"}
+        }
+      }
+    }
+  }
+}

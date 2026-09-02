@@ -1,0 +1,57 @@
+# vPLANNER — light, speed-optimized gitignore
+# Generated 2026-09-03 — stdlib-only, no pip artifacts, no large corpora on remote.
+
+# — Python —
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# — Toolkit generated outputs (never commit; rebuild via python run_all.py) —
+toolkit/data/
+toolkit/data-lab/
+toolkit/.pipeline_state.json
+toolkit/control-center-state/rounds/*.json
+toolkit/control-center-state/feedback/*.json
+# keep directory scaffolding
+!toolkit/control-center-state/.gitkeep
+!toolkit/control-center-state/rounds/.gitkeep
+!toolkit/control-center-state/feedback/.gitkeep
+
+# — Raw corpora (stress-test fixtures, can be 10s of MB / corrupted) —
+# Keep the empty scaffolding; ignore actual corpus files
+data-lab/**/*.md
+data-lab/**/*.json
+data-lab/**/*.txt
+data-lab/**/*.zip
+data-lab/**/*.tar
+data-lab/**/*.gz
+!data-lab/**/.gitkeep
+# Uncomment to track a tiny fixture corpus:
+# !data-lab/fixtures/**
+
+# — OS / Editor —
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.code-workspace
+
+# — Parent repo isolation (when nested inside VIVIM-NEW during migration) —
+# This file lives at vPLANNER root; parent handles its own ignores separately.
+
+# — Large artifacts —
+*.log
+*.tmp
+*.bak

@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forge.local/schemas/dependency-edge.schema.json",
+  "title": "DependencyEdge",
+  "description": "First-class typed edge between any two atomic units. Replaces v1's phase-adjacency inference. See 00_DESIGN.md section 2.1.",
+  "type": "object",
+  "required": ["dep_id", "from", "to", "type", "hard"],
+  "properties": {
+    "dep_id": { "type": "string", "pattern": "^DEP-[0-9]{4,}$" },
+    "from": { "type": "string", "description": "The blocked unit_id." },
+    "to": { "type": "string", "description": "The blocking unit_id." },
+    "type": {
+      "type": "string",
+      "enum": ["FINISH_TO_START", "START_TO_START", "FINISH_TO_FINISH", "SOFT_ADVISORY"]
+    },
+    "reason": { "type": "string" },
+    "hard": {
+      "type": "boolean",
+      "description": "true = dispatcher will not fire 'from' until 'to' satisfies the edge type. false = advisory only, dispatcher warns but does not block."
+    },
+    "evidence": {
+      "type": "string",
+      "description": "Optional pointer to an IFACE- interface contract or provenance line that grounds this edge in something concrete rather than assumed."
+    }
+  }
+}

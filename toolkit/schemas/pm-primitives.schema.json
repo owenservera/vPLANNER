@@ -1,0 +1,141 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://forge.local/schemas/pm-primitives.schema.json",
+  "title": "PM Primitives (new in v2)",
+  "description": "Definitions for the 10 new project-management primitives beyond v1's Workstream/Phase/Milestone/Backlog/Risk/Decision. See 00_DESIGN.md section 2.",
+  "definitions": {
+
+    "Assumption": {
+      "type": "object",
+      "required": ["asm_id", "statement", "validation_trigger", "owner", "status"],
+      "properties": {
+        "asm_id": { "type": "string", "pattern": "^ASM-[0-9]{4,}$" },
+        "statement": { "type": "string" },
+        "validation_trigger": {
+          "type": "string",
+          "description": "What event or milestone will confirm or falsify this assumption."
+        },
+        "owner": { "type": "string" },
+        "status": { "type": "string", "enum": ["UNVALIDATED", "VALIDATED", "FALSIFIED"] },
+        "impact_if_false": { "type": "string" },
+        "linked_units": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "Constraint": {
+      "type": "object",
+      "required": ["con_id", "statement", "kind"],
+      "properties": {
+        "con_id": { "type": "string", "pattern": "^CON-[0-9]{4,}$" },
+        "statement": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["BUDGET", "LICENSE", "PLATFORM", "DEADLINE", "REGULATORY", "TECHNICAL", "ORG"]
+        },
+        "hard": { "type": "boolean", "description": "true = cannot be traded off, ever." },
+        "linked_units": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "InterfaceContract": {
+      "type": "object",
+      "required": ["iface_id", "name", "producer", "consumer", "schema_ref"],
+      "properties": {
+        "iface_id": { "type": "string", "pattern": "^IFACE-[0-9]{4,}$" },
+        "name": { "type": "string" },
+        "producer": { "type": "string", "pattern": "^WS-[0-9]{2,}$" },
+        "consumer": { "type": "string", "pattern": "^WS-[0-9]{2,}$" },
+        "schema_ref": {
+          "type": "string",
+          "description": "Path to the JSON Schema, OpenAPI fragment, or type def that makes this contract concrete."
+        },
+        "status": { "type": "string", "enum": ["PROPOSED", "AGREED", "IMPLEMENTED", "BROKEN"] },
+        "version": { "type": "string" }
+      }
+    },
+
+    "SkillRequirement": {
+      "type": "object",
+      "required": ["skill_id", "name", "kind"],
+      "properties": {
+        "skill_id": { "type": "string", "pattern": "^SKILL-[0-9]{4,}$" },
+        "name": { "type": "string" },
+        "kind": {
+          "type": "string",
+          "enum": ["TOOL_ACCESS", "CONNECTOR", "HUMAN_EXPERTISE", "CREDENTIAL", "DATASET_ACCESS"]
+        },
+        "notes": { "type": "string" }
+      }
+    },
+
+    "DefinitionOfReady": {
+      "type": "object",
+      "required": ["dor_id", "workstream", "checklist"],
+      "properties": {
+        "dor_id": { "type": "string", "pattern": "^DOR-.+$" },
+        "workstream": { "type": "string", "pattern": "^WS-[0-9]{2,}$" },
+        "checklist": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Conditions a WORK item must satisfy before leaving PENDING for this workstream."
+        }
+      }
+    },
+
+    "Checkpoint": {
+      "type": "object",
+      "required": ["ckpt_id", "trigger", "reviewer_role"],
+      "properties": {
+        "ckpt_id": { "type": "string", "pattern": "^CKPT-[0-9]{4,}$" },
+        "trigger": {
+          "type": "string",
+          "description": "What causes this checkpoint to fire, e.g. 'before RATIFIED transition' or 'after 3 auto-escalations in one workstream'."
+        },
+        "reviewer_role": { "type": "string", "description": "See 00-CORE/01_AGENT-ROLES.md" },
+        "blocking": { "type": "boolean" },
+        "linked_units": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+
+    "BudgetLine": {
+      "type": "object",
+      "required": ["bud_id", "scope", "est_tokens_total"],
+      "properties": {
+        "bud_id": { "type": "string", "pattern": "^BUD-.+$" },
+        "scope": { "type": "string", "description": "WS- or PH- id this budget applies to." },
+        "est_tokens_total": { "type": "integer", "minimum": 0 },
+        "actual_tokens_spent": { "type": "integer", "minimum": 0 },
+        "est_cost_usd": { "type": "number", "minimum": 0 },
+        "actual_cost_usd": { "type": "number", "minimum": 0 },
+        "alert_threshold_pct": { "type": "number", "default": 80 }
+      }
+    },
+
+    "EscalationRecord": {
+      "type": "object",
+      "required": ["esc_id", "unit_id", "from_tier", "to_tier", "trigger", "timestamp"],
+      "properties": {
+        "esc_id": { "type": "string", "pattern": "^ESC-[0-9]{4,}$" },
+        "unit_id": { "type": "string" },
+        "from_tier": { "$ref": "model-tier.schema.json" },
+        "to_tier": { "$ref": "model-tier.schema.json" },
+        "trigger": { "type": "string", "description": "Which auto-escalation rule fired, or 'MANUAL: <reason>'." },
+        "timestamp": { "type": "string", "format": "date-time" },
+        "authorized_by": { "type": "string" }
+      }
+    },
+
+    "RollbackPoint": {
+      "type": "object",
+      "required": ["rbk_id", "label", "created_at", "scope"],
+      "properties": {
+        "rbk_id": { "type": "string", "pattern": "^RBK-[0-9]{4,}$" },
+        "label": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "scope": { "type": "string", "description": "What this snapshot covers: a doc, a workstream, the whole backbone." },
+        "git_ref": { "type": "string" },
+        "restorable": { "type": "boolean", "default": true }
+      }
+    }
+  }
+}

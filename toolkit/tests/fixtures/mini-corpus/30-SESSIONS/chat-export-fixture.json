@@ -1,0 +1,23 @@
+{
+  "_comment": "Fixture chat-export: 3 assistant turns, content_list phases, 2 code blocks (ts + python), 1 spec section",
+  "chat": {
+    "history": {
+      "currentId": "msg-fixture-003",
+      "currentResponseIds": ["msg-fixture-003"],
+      "messages": {
+        "msg-fixture-001": {"id": "msg-fixture-001", "role": "user", "timestamp": 1690000000,
+                          "parentId": null, "childrenIds": ["msg-fixture-002"]},
+        "msg-fixture-002": {"id": "msg-fixture-002", "role": "assistant", "timestamp": 1690000001,
+                          "parentId": "msg-fixture-001", "childrenIds": ["msg-fixture-003"],
+                          "content_list": [
+                            {"phase": "thinking_summary", "content": "Plan: create module"},
+                            {"phase": "code_interpreter", "content": "```typescript\n// src/engines/module-registry.ts\nexport class ModuleRegistry {}\n```"},
+                            {"phase": "answer", "content": "# Module Registry\nCreated the registry per spec."}
+                          ]},
+        "msg-fixture-003": {"id": "msg-fixture-003", "role": "assistant", "timestamp": 1690000002,
+                          "parentId": "msg-fixture-002", "childrenIds": [],
+                          "content": "# Fixture Spec\nRequirements and capabilities listed.\n```python\n# scripts/test.py\ndef run(): pass\n```"}
+      }
+    }
+  }
+}

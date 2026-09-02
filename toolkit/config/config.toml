@@ -1,0 +1,72 @@
+# V4 CONSOLIDATOR — PROJECT-AGNOSTIC CONFIGURATION
+# Single source of truth for paths, thresholds, and extraction behavior.
+# Point corpus_root at ANY folder with messy docs (10s of MBs, even corrupted).
+# No VIVIM-specific values here — see config/entity-packs/ for domain packs.
+
+[paths]
+# Corpus root: folder holding the messy documentation to consolidate.
+# Use absolute path or relative to v4/ directory. Example: "../../" = vAUTOMATION root.
+corpus_root   = "../data-lab"
+data_dir      = "data"
+fragments_dir = "data/fragments"
+# Optional: additional roots for chat exports and code trees (also covered by corpus walk)
+chat_exports  = ""                # optional hint; auto-detected in walk
+code_trees    = []                # optional explicit paths; also auto-detected heuristically
+
+[thresholds]
+# Escalation funnel confidence ladder (see core/funnel.py)
+t_auto  = 0.90   # >= this  -> T0 deterministic, never escalates
+t_cheap = 0.60   # >= this  -> T1 FLASH (cheap model / heuristic)
+t_llm   = 0.30   # >= this  -> T2 STRONG/CAPABLE; below -> T3 human
+
+[ke]
+# KE classifier thresholds (see ingest/t1_ke_scan.py)
+# Generic: out_of_scope signals vs in_scope signals. User-configurable.
+axiom_kernel_min = 5
+kernel_word_min  = 3
+in_scope_min     = 2
+
+[scope_terms]
+# Project-agnostic scope signal configuration.
+# Define what counts as "out-of-scope" vs "in-scope" for YOUR corpus.
+# If empty, ke_scan runs in CLEAN passthrough (never blocks).
+# Example for VIVIM: out_of_scope = ["kernel", "axiom", "AX-\\d{3}"]
+# For a generic project, leave empty and use scope.json clusters instead.
+out_of_scope = []
+in_scope     = []
+
+[discovery]
+cluster_threshold = 0.22        # Jaccard+cosine threshold for heading clustering
+max_clusters      = 8           # cap on discovered clusters
+min_cluster_size  = 1           # smallest cluster kept (1 = singletons allowed)
+
+[limits]
+max_verbatim_chars = 4000    # cap on stored verbatim snippet
+max_file_bytes     = 4000000  # skip files larger than this (4 MB) — head+tail sampled
+sample_per_category = 8
+sample_seed        = 42
+
+[source_priority]
+# Empty on blind start — ALL priorities uniform. Add entries only if the
+# corpus has meaningful priority tiers (e.g. "src" = 3, "archive" = 1).
+
+[extraction]
+# Regex packs loaded from config/entity-packs/*.json — see that directory.
+# Confidence weights for fragment scoring (see extract/engine.py)
+confidence_weights = { has_code = 0.20, has_table = 0.15, canonical_hint = 0.15, contract_bonus = 0.05 }
+
+[control_center]
+layers = ["L0", "L1", "L2", "L3", "L4", "L5"]
+publish_history = "../../60-CANONICAL/DOCPACK/history"
+watch_poll_ms = 3000
+
+[budgets]
+# Token budgets are OPTIONAL and UNCONSTRAINED by default — speed is primary.
+# If this section is empty, the pipeline never checks budgets; the Control Center
+# shows "unconstrained" and hides burn-down. Add entries only if you want advisory tracking.
+# Budgets NEVER block the pipeline (no gate, no throttle, no limit).
+# Example (uncomment to enable advisory tracking):
+# "BUD-PH1" = 150000
+# "BUD-PH2" = 40000
+# "BUD-PH3" = 80000
+# "BUD-PH4" = 20000
